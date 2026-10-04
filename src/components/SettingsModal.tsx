@@ -29,6 +29,7 @@ import {
   getGroqConfig,
   setGroqConfig,
   testGroqConnection,
+  fetchGroqModels,
   AVAILABLE_GROQ_MODELS,
   DEFAULT_GROQ_MODEL,
 } from "../services/rephraseService";
@@ -61,13 +62,37 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [groqModel, setGroqModel] = useState<string>(DEFAULT_GROQ_MODEL);
   const [showGroqKey, setShowGroqKey] = useState<boolean>(false);
   const [isTestingGroq, setIsTestingGroq] = useState<boolean>(false);
+  const [isFetchingModels, setIsFetchingModels] = useState<boolean>(false);
+  const [modelList, setModelList] = useState<Array<{ id: string; name: string }>>(AVAILABLE_GROQ_MODELS);
   const [groqTestResult, setGroqTestResult] = useState<{
     success: boolean;
     message: string;
     latencyMs?: number;
+    suggestedModel?: string;
+    availableModels?: string[];
   } | null>(null);
 
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
+
+  const loadDynamicModels = async (key: string) => {
+    if (!key.trim()) return;
+    setIsFetchingModels(true);
+    try {
+      const ids = await fetchGroqModels(key);
+      if (ids.length > 0) {
+        const merged = ids.map((id) => {
+          const found = AVAILABLE_GROQ_MODELS.find((m) => m.id === id);
+          return {
+            id,
+            name: found ? found.name : `${id}`,
+          };
+        });
+        setModelList(merged);
+      }
+    } finally {
+      setIsFetchingModels(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -78,6 +103,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       setGroqApiKey(groqCfg.apiKey);
       setGroqModel(groqCfg.model);
       setGroqTestResult(null);
+
+      if (groqCfg.apiKey) {
+        loadDynamicModels(groqCfg.apiKey);
+      } else {
+        setModelList(AVAILABLE_GROQ_MODELS);
+      }
 
       setSavedSuccess(false);
     }
@@ -106,12 +137,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     }
   };
 
-  const handleTestGroq = async () => {
+  const handleTestGroq = async (overrideModel?: string) => {
+    const modelToTest = overrideModel || groqModel;
     setIsTestingGroq(true);
     setGroqTestResult(null);
     try {
-      const result = await testGroqConnection(groqApiKey, groqModel);
+      const result = await testGroqConnection(groqApiKey, modelToTest);
       setGroqTestResult(result);
+      if (result.availableModels && result.availableModels.length > 0) {
+        const merged = result.availableModels.map((id) => {
+          const found = AVAILABLE_GROQ_MODELS.find((m) => m.id === id);
+          return { id, name: found ? found.name : id };
+        });
+        setModelList(merged);
+      }
     } finally {
       setIsTestingGroq(false);
     }
@@ -267,6 +306,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         setGroqApiKey(e.target.value);
                         setGroqTestResult(null);
                       }}
+                      onBlur={() => {
+                        if (groqApiKey.trim().length >= 15) {
+                          loadDynamicModels(groqApiKey);
+                        }
+                      }}
                       placeholder="gsk_..."
                       className="w-full pl-3.5 pr-10 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-mono text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
                     />
@@ -281,7 +325,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                   <button
                     type="button"
-                    onClick={handleTestGroq}
+                    onClick={() => handleTestGroq()}
                     disabled={isTestingGroq || !groqApiKey.trim()}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium text-slate-700 dark:text-slate-200 transition-colors disabled:opacity-50"
                   >
@@ -293,7 +337,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
               {/* Model Selection */}
               <div className="space-y-1.5">
-                <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">Model</span>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-600 dark:text-slate-300 font-medium">Model</span>
+                  <button
+                    type="button"
+                    onClick={() => loadDynamicModels(groqApiKey)}
+                    disabled={isFetchingModels || !groqApiKey.trim()}
+                    className="text-[11px] text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 disabled:opacity-40"
+                    title="Detect models accessible by your API key"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${isFetchingModels ? "animate-spin text-amber-500" : ""}`} />
+                    <span>Detect account models</span>
+                  </button>
+                </div>
                 <select
                   value={groqModel}
                   onChange={(e) => {
@@ -302,36 +358,62 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   }}
                   className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500/40 cursor-pointer"
                 >
-                  {AVAILABLE_GROQ_MODELS.map((m) => (
+                  {modelList.map((m) => (
                     <option key={m.id} value={m.id}>
                       {m.name}
                     </option>
                   ))}
+                  {!modelList.some((m) => m.id === groqModel) && (
+                    <option value={groqModel}>{groqModel} (Custom)</option>
+                  )}
                 </select>
               </div>
 
               {/* Test status banner */}
               {groqTestResult && (
                 <div
-                  className={`p-2.5 rounded-xl border flex items-start gap-2 text-xs animate-in fade-in duration-150 ${
+                  className={`p-2.5 rounded-xl border text-xs animate-in fade-in duration-150 ${
                     groqTestResult.success
                       ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300"
                       : "bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300"
                   }`}
                 >
-                  {groqTestResult.success ? (
-                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500 mt-0.5" />
-                  ) : (
-                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-500 mt-0.5" />
-                  )}
-                  <div className="flex-1 leading-relaxed">
-                    <p className="font-medium">{groqTestResult.message}</p>
-                    {groqTestResult.latencyMs && (
-                      <p className="text-[11px] opacity-80 mt-0.5">
-                        Latency: <span className="font-mono font-semibold">{groqTestResult.latencyMs}ms</span>
-                      </p>
+                  <div className="flex items-start gap-2">
+                    {groqTestResult.success ? (
+                      <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500 mt-0.5" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-500 mt-0.5" />
                     )}
+                    <div className="flex-1 leading-relaxed">
+                      <p className="font-medium">{groqTestResult.message}</p>
+                      {groqTestResult.latencyMs && (
+                        <p className="text-[11px] opacity-80 mt-0.5">
+                          Latency: <span className="font-mono font-semibold">{groqTestResult.latencyMs}ms</span>
+                        </p>
+                      )}
+                    </div>
                   </div>
+
+                  {/* 1-Click Auto Recovery button if model was unavailable */}
+                  {groqTestResult.suggestedModel && (
+                    <div className="mt-2.5 pt-2 border-t border-rose-200/60 dark:border-rose-800/60 flex items-center justify-between gap-2">
+                      <span className="text-[11px] text-rose-600 dark:text-rose-300">
+                        Suggested model: <strong className="font-mono">{groqTestResult.suggestedModel}</strong>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const suggested = groqTestResult.suggestedModel!;
+                          setGroqModel(suggested);
+                          handleTestGroq(suggested);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-medium text-[11px] shadow-sm transition-all active:scale-95 shrink-0"
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        <span>Switch & Re-test</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

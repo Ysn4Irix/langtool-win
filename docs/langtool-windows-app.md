@@ -31,4 +31,4 @@ Build a lightweight, high-performance Windows desktop application using Tauri v2
 2. **Window Lifecycle**: Closing window (`X`) minimizes to system tray; global hotkey (`Ctrl+Shift+L`) summons app; tray context menu has "Quit" to fully terminate.
 3. **Offset Handling**: Accurate Unicode slice handling so multi-byte/accented characters don't drift offsets.
 4. **Draft Persistence**: User input is immediately persisted to local storage so any ongoing work is never lost between sessions or when minimized to tray. If cleared by the user, the editor starts clean.
-5. **AI Sentence Rephrasing**: Powered strictly by Groq Cloud (`llama-3.3-70b-versatile`) via JSON mode for blazing-fast (<250ms), reliable multi-tone variations without external library overhead. Triggerable via floating sentence button, error popover, or `Ctrl+Shift+R`.
+5. **AI Sentence Rephrasing**: Powered strictly by Groq Cloud (`llama-3.1-8b-instant` default with dynamic model detection & auto-fallback) via JSON mode for blazing-fast (<250ms), reliable multi-tone variations without external library overhead. Triggerable via floating sentence button, error popover, or `Ctrl+Shift+R`.

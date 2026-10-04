@@ -127,7 +127,7 @@ export const RephraseModal: React.FC<RephraseModalProps> = ({
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-semibold">Sentence Rephraser</h2>
                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950/80 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800">
-                  Groq Cloud Llama 3.3
+                  Groq Cloud LPU
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -220,7 +220,7 @@ export const RephraseModal: React.FC<RephraseModalProps> = ({
               <div className="flex flex-col items-center justify-center gap-2 text-slate-500 dark:text-slate-400">
                 <RefreshCw className="w-6 h-6 animate-spin text-amber-500" />
                 <span className="text-xs font-medium">
-                  Crafting 3 natural variations with Groq Llama 3.3...
+                  Crafting 3 natural variations with Groq Cloud...
                 </span>
               </div>
               <div className="space-y-2.5 pt-2">
