@@ -75,25 +75,48 @@ def get_window_hwnd():
     return None
 
 def set_window_topmost(on_top: bool, hwnd=None):
-    """Pin or unpin the window on top using native pywebview and WinForms Form.TopMost."""
+    """Pin or unpin the window on top using Win32 SetWindowPos and native pywebview asynchronously."""
     global main_window
     if not main_window:
         return
 
-    # 1. Native pywebview on_top property (directly updates WinForms Form.TopMost)
+    # 1. Native Win32 SetWindowPos with SWP_ASYNCWINDOWPOS to guarantee non-blocking execution across threads
     try:
-        main_window.on_top = bool(on_top)
-    except Exception as e:
-        print("pywebview main_window.on_top warning:", e)
+        target_hwnd = hwnd or get_window_hwnd()
+        if target_hwnd:
+            user32 = ctypes.windll.user32
+            HWND_TOPMOST = -1
+            HWND_NOTOPMOST = -2
+            SWP_NOMOVE = 0x0002
+            SWP_NOSIZE = 0x0001
+            SWP_NOACTIVATE = 0x0010
+            SWP_SHOWWINDOW = 0x0040
+            SWP_ASYNCWINDOWPOS = 0x4000
 
-    # 2. Directly sync WinForms Form instance TopMost
-    try:
-        import webview.platforms.winforms as wf
-        inst = wf.BrowserView.instances.get(main_window.uid)
-        if inst:
-            inst.TopMost = bool(on_top)
-    except Exception:
-        pass
+            user32.SetWindowPos(
+                target_hwnd,
+                HWND_TOPMOST if on_top else HWND_NOTOPMOST,
+                0, 0, 0, 0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_ASYNCWINDOWPOS
+            )
+    except Exception as e:
+        print("SetWindowPos topmost warning:", e)
+
+    # 2. Sync pywebview and WinForms property in background daemon thread
+    def _sync_pywebview_property():
+        try:
+            main_window.on_top = bool(on_top)
+        except Exception:
+            pass
+        try:
+            import webview.platforms.winforms as wf
+            inst = wf.BrowserView.instances.get(main_window.uid)
+            if inst:
+                inst.TopMost = bool(on_top)
+        except Exception:
+            pass
+
+    threading.Thread(target=_sync_pywebview_property, daemon=True).start()
 
 class DesktopBridge:
     def __init__(self):
@@ -153,32 +176,34 @@ class DesktopBridge:
         global main_window
         if not main_window:
             return
-        try:
-            payload = json.dumps(self.get_window_state())
-            main_window.evaluate_js(f"window.__onDesktopWindowStateChanged && window.__onDesktopWindowStateChanged({payload});")
-        except Exception as e:
-            print("notify_frontend error:", e)
+        def _dispatch():
+            try:
+                payload = json.dumps(self.get_window_state())
+                main_window.evaluate_js(f"window.__onDesktopWindowStateChanged && window.__onDesktopWindowStateChanged({payload});")
+            except Exception as e:
+                print("notify_frontend error:", e)
+        threading.Thread(target=_dispatch, daemon=True).start()
 
     def toggle_always_on_top(self):
         self.state["is_pinned"] = not self.state["is_pinned"]
         set_window_topmost(self.state["is_pinned"])
-        save_window_state()
-        self.notify_frontend()
+        debounced_save_state()
         return self.get_window_state()
 
     def set_always_on_top(self, enable: bool):
         self.state["is_pinned"] = bool(enable)
         set_window_topmost(self.state["is_pinned"])
-        save_window_state()
-        self.notify_frontend()
+        debounced_save_state()
         return self.get_window_state()
 
     def toggle_mini_mode(self):
         show_window()
         if self.state["mode"] == "studio":
-            return self.set_mini_mode(True)
+            res = self.set_mini_mode(True)
         else:
-            return self.set_mini_mode(False)
+            res = self.set_mini_mode(False)
+        self.notify_frontend()
+        return res
 
     def set_mini_mode(self, enable: bool):
         global main_window
@@ -264,8 +289,7 @@ class DesktopBridge:
                     main_window.maximize()
                 force_activate_window(hwnd)
 
-        save_window_state()
-        self.notify_frontend()
+        debounced_save_state()
         return self.get_window_state()
 
 desktop_bridge = DesktopBridge()
@@ -321,15 +345,36 @@ def save_window_state():
     with save_lock:
         try:
             hwnd = get_window_hwnd()
+            w = None
+            h = None
+            x = None
+            y = None
+
             if hwnd:
                 user32 = ctypes.windll.user32
                 if user32.IsIconic(hwnd):
                     return
 
-            w = getattr(main_window, "width", None)
-            h = getattr(main_window, "height", None)
-            x = getattr(main_window, "x", None)
-            y = getattr(main_window, "y", None)
+                class RECT(ctypes.Structure):
+                    _fields_ = [
+                        ("left", ctypes.c_long),
+                        ("top", ctypes.c_long),
+                        ("right", ctypes.c_long),
+                        ("bottom", ctypes.c_long),
+                    ]
+
+                rect = RECT()
+                if user32.GetWindowRect(hwnd, ctypes.byref(rect)):
+                    w = rect.right - rect.left
+                    h = rect.bottom - rect.top
+                    x = rect.left
+                    y = rect.top
+
+            if w is None or h is None:
+                w = getattr(main_window, "width", None)
+                h = getattr(main_window, "height", None)
+                x = getattr(main_window, "x", None)
+                y = getattr(main_window, "y", None)
 
             if desktop_bridge.state["mode"] == "mini":
                 if w and w >= 300:
@@ -513,7 +558,7 @@ def setup_system_tray(icon_path):
         menu = pystray.Menu(
             pystray.MenuItem("Open langtool", lambda icon, item: show_window(), default=True),
             pystray.MenuItem("Toggle Mini Mode (Ctrl+Shift+P)", lambda icon, item: desktop_bridge.toggle_mini_mode()),
-            pystray.MenuItem("Toggle Always on Top", lambda icon, item: desktop_bridge.toggle_always_on_top()),
+            pystray.MenuItem("Toggle Always on Top", lambda icon, item: (desktop_bridge.toggle_always_on_top(), desktop_bridge.notify_frontend())),
             pystray.MenuItem("Hide to Tray", lambda icon, item: hide_window()),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem("langtool API: langtool.ysnirix.xyz", lambda icon, item: None, enabled=False),
