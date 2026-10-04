@@ -23,8 +23,10 @@ Build a lightweight, high-performance Windows desktop application using Tauri v2
 - [x] System tray minimize works properly.
 - [x] Light mode, Dark mode, and System theme synchronization work smoothly.
 - [x] API URL can be customized, tested, and saved in settings.
+- [x] Clean start with no hardcoded sample sentences; automatically preserves user draft text across restarts.
 
 ## Key Decisions & Edge Cases
 1. **Underline Behavior**: Clear underline on the word being actively edited, refresh all wavy squiggles 500ms after user pauses typing to prevent misaligned visual jitter.
 2. **Window Lifecycle**: Closing window (`X`) minimizes to system tray; global hotkey (`Ctrl+Shift+L`) summons app; tray context menu has "Quit" to fully terminate.
 3. **Offset Handling**: Accurate Unicode slice handling so multi-byte/accented characters don't drift offsets.
+4. **Draft Persistence**: User input is immediately persisted to local storage so any ongoing work is never lost between sessions or when minimized to tray. If cleared by the user, the editor starts clean.

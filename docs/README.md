@@ -29,6 +29,9 @@ A high-performance, ultra-lightweight Windows desktop application designed for r
 - 🌐 **60+ Languages & Auto-Detect**:
   - Automatic language detection enabled by default (`language=auto`).
   - Searchable dropdown supporting over 60 languages (English US/GB, Spanish, French, German, Arabic, etc.).
+- 💾 **Auto-Save & Preserved User Input**:
+  - Automatically preserves whatever text you type in real-time across app restarts, reloads, and tray sessions.
+  - Starts with a clean, distraction-free blank canvas (no default demo text) if cleared.
 - 📐 **Preserved Custom Window Resizing**:
   - Automatically remembers your custom window dimensions (width & height), desktop screen position (`x`, `y`), and maximized state across restarts.
   - Safely ignores minimized states so restoring always returns to your preferred writing size.
