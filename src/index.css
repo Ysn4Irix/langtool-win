@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #0f172a;
+  color: #f8fafc;
+  user-select: none;
+  overflow: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Wavy squiggly underlines matching native spellcheckers */
+.squiggle-spelling {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: #ef4444; /* red-500 */
+  text-decoration-thickness: 2.2px;
+  text-underline-offset: 4px;
+  cursor: pointer;
+  background-color: rgba(239, 68, 68, 0.08);
+  border-radius: 2px;
+  transition: background-color 0.15s ease;
+}
+.squiggle-spelling:hover {
+  background-color: rgba(239, 68, 68, 0.22);
+}
+
+.squiggle-grammar {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: #f59e0b; /* amber-500 */
+  text-decoration-thickness: 2.2px;
+  text-underline-offset: 4px;
+  cursor: pointer;
+  background-color: rgba(245, 158, 11, 0.08);
+  border-radius: 2px;
+  transition: background-color 0.15s ease;
+}
+.squiggle-grammar:hover {
+  background-color: rgba(245, 158, 11, 0.22);
+}
+
+.squiggle-style {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: #3b82f6; /* blue-500 */
+  text-decoration-thickness: 2.2px;
+  text-underline-offset: 4px;
+  cursor: pointer;
+  background-color: rgba(59, 130, 246, 0.08);
+  border-radius: 2px;
+  transition: background-color 0.15s ease;
+}
+.squiggle-style:hover {
+  background-color: rgba(59, 130, 246, 0.22);
+}
+
+/* Selected error pulse */
+.squiggle-selected {
+  outline: 2px solid rgba(147, 197, 253, 0.6);
+  border-radius: 3px;
+}
