@@ -12,6 +12,7 @@ interface StatusBarProps {
   detectedLanguageName?: string;
   apiUrl: string;
   onOpenSettings: () => void;
+  onRephrase?: () => void;
 }
 
 export const StatusBar: React.FC<StatusBarProps> = ({
@@ -25,6 +26,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   detectedLanguageName,
   apiUrl,
   onOpenSettings,
+  onRephrase,
 }) => {
   // Extract hostname for clean pill display
   let displayHost = "API Server";
@@ -88,8 +90,20 @@ export const StatusBar: React.FC<StatusBarProps> = ({
 
       {/* Right: API Server & Shortcuts hint */}
       <div className="flex items-center gap-3">
-        <span className="hidden lg:inline text-slate-400 dark:text-slate-500 font-mono text-[10px]">
-          Ctrl+Enter check • Ctrl+Shift+R rephrase • Ctrl+Shift+C copy
+        <span className="hidden lg:flex items-center gap-1.5 text-slate-400 dark:text-slate-500 font-mono text-[10px]">
+          <span>Ctrl+Enter check •</span>
+          {onRephrase ? (
+            <button
+              onClick={onRephrase}
+              title="Click to rephrase active sentence (Ctrl+Shift+R)"
+              className="hover:text-amber-500 dark:hover:text-amber-400 transition-colors cursor-pointer"
+            >
+              Ctrl+Shift+R rephrase
+            </button>
+          ) : (
+            <span>Ctrl+Shift+R rephrase</span>
+          )}
+          <span>• Ctrl+Shift+C copy</span>
         </span>
 
         {/* Clickable API Server pill */}

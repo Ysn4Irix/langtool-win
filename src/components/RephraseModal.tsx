@@ -12,6 +12,7 @@ import {
   Leaf,
   AlertCircle,
   ArrowRight,
+  Globe,
 } from "lucide-react";
 import { RephraseSentenceInfo, RephraseSuggestion } from "../types/rephrase";
 import {
@@ -24,6 +25,7 @@ interface RephraseModalProps {
   isOpen: boolean;
   onClose: () => void;
   sentenceInfo: RephraseSentenceInfo | null;
+  languageName?: string;
   onApply: (replacement: string) => void;
   onOpenSettings: () => void;
 }
@@ -32,6 +34,7 @@ export const RephraseModal: React.FC<RephraseModalProps> = ({
   isOpen,
   onClose,
   sentenceInfo,
+  languageName,
   onApply,
   onOpenSettings,
 }) => {
@@ -44,24 +47,29 @@ export const RephraseModal: React.FC<RephraseModalProps> = ({
   const [quickApiKey, setQuickApiKey] = useState<string>("");
   const [hasKey, setHasKey] = useState<boolean>(isGroqConfigured);
 
-  const fetchSuggestions = useCallback(async (targetSentence: string) => {
-    setIsLoading(true);
-    setError(null);
-    setSuggestions([]);
+  const fetchSuggestions = useCallback(
+    async (targetSentence: string) => {
+      setIsLoading(true);
+      setError(null);
+      setSuggestions([]);
 
-    try {
-      const results = await rephraseSentence(targetSentence);
-      setSuggestions(results);
-    } catch (err: any) {
-      if (err.message === "GROQ_API_KEY_REQUIRED") {
-        setHasKey(false);
-      } else {
-        setError(err.message || "Failed to generate rephrased suggestions.");
+      try {
+        const results = await rephraseSentence(targetSentence, {
+          language: languageName,
+        });
+        setSuggestions(results);
+      } catch (err: any) {
+        if (err.message === "GROQ_API_KEY_REQUIRED") {
+          setHasKey(false);
+        } else {
+          setError(err.message || "Failed to generate rephrased suggestions.");
+        }
+      } finally {
+        setIsLoading(false);
       }
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [languageName]
+  );
 
   // When modal opens, check config and fetch if key present
   useEffect(() => {
@@ -129,6 +137,12 @@ export const RephraseModal: React.FC<RephraseModalProps> = ({
                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950/80 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800">
                   Groq Cloud LPU
                 </span>
+                {languageName && (
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center gap-1">
+                    <Globe className="w-3 h-3 text-sky-500" />
+                    <span>{languageName}</span>
+                  </span>
+                )}
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 Generate clearer, more natural phrasing with one-click replacements

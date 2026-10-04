@@ -23,6 +23,8 @@ interface HeaderProps {
   detectedLanguage?: DetectedLanguage;
   isChecking: boolean;
   onManualCheck: () => void;
+  onRephrase?: () => void;
+  hasText?: boolean;
   onClearText: () => void;
   onCopyText: () => void;
   isCopied: boolean;
@@ -42,6 +44,8 @@ export const Header: React.FC<HeaderProps> = ({
   detectedLanguage,
   isChecking,
   onManualCheck,
+  onRephrase,
+  hasText,
   onClearText,
   onCopyText,
   isCopied,
@@ -209,6 +213,19 @@ export const Header: React.FC<HeaderProps> = ({
           />
           <span className="hidden sm:inline">Check</span>
         </button>
+
+        {/* AI Rephrase button */}
+        {onRephrase && (
+          <button
+            onClick={onRephrase}
+            disabled={!hasText}
+            title="Rephrase active sentence with Groq Cloud (Ctrl+Shift+R)"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 text-xs font-medium text-amber-700 dark:text-amber-300 border border-amber-300/80 dark:border-amber-600/50 transition-colors disabled:opacity-40 shadow-sm"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <span className="hidden sm:inline">Rephrase</span>
+          </button>
+        )}
 
         {/* Copy button */}
         <button

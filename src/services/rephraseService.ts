@@ -1,4 +1,4 @@
-import { GroqConfig, RephraseSuggestion } from "../types/rephrase";
+import { GroqConfig, RephraseOptions, RephraseSuggestion } from "../types/rephrase";
 
 const STORAGE_KEY = "langtool_groq_config";
 export const DEFAULT_GROQ_MODEL = "llama-3.1-8b-instant";
@@ -190,20 +190,31 @@ export async function testGroqConnection(
  * 1) Natural & Fluent
  * 2) Professional / Formal
  * 3) Concise
+ * Supports multilingual rephrasing preserving the exact source language.
  */
 export async function rephraseSentence(
   sentence: string,
-  configOverride?: Partial<GroqConfig>
+  options?: RephraseOptions
 ): Promise<RephraseSuggestion[]> {
-  const config = { ...getGroqConfig(), ...configOverride };
+  const config = { ...getGroqConfig(), ...options };
   if (!config.apiKey) {
     throw new Error("GROQ_API_KEY_REQUIRED");
   }
 
-  const promptSystem = `You are a world-class stylistic writing editor. For the provided sentence, generate exactly 3 natural rephrased versions:
-1. "natural": Fluent, conversational, native English cadence, sounds effortless and human.
-2. "professional": Articulate, refined, formal business/academic tone.
-3. "concise": Direct, tight, eliminates unnecessary fluff or filler while preserving full meaning.
+  const langHint =
+    options?.language &&
+    options.language !== "auto" &&
+    options.language.toLowerCase() !== "auto-detect"
+      ? `The text is in ${options.language}. You MUST preserve and generate all rephrased versions strictly in ${options.language}. Never translate to another language.`
+      : `CRITICAL MULTILINGUAL INSTRUCTION: Detect the language of the input sentence. You MUST preserve and generate all rephrased versions strictly in the EXACT SAME LANGUAGE as the input sentence (e.g. German, French, Spanish, Indonesian, English, etc.). Never translate the sentence to English or any other language unless the input sentence was already written in that language.`;
+
+  const promptSystem = `You are a world-class multilingual stylistic writing editor and native linguistic specialist.
+${langHint}
+
+For the provided sentence, generate exactly 3 stylistic rephrased versions in the input sentence's original language:
+1. "natural": Fluent, idiomatic, conversational cadence that sounds effortless and native to speakers of that language.
+2. "professional": Articulate, refined, executive/academic formal tone in that language.
+3. "concise": Direct, tight, eliminates unnecessary fluff or filler words while preserving 100% of the original meaning.
 
 Output strictly valid JSON with this exact schema:
 {
@@ -211,20 +222,20 @@ Output strictly valid JSON with this exact schema:
     {
       "tone": "natural",
       "label": "Natural & Fluent",
-      "text": "Rewritten sentence here",
-      "note": "Brief 3-6 word summary of enhancement"
+      "text": "Rewritten sentence here in original language",
+      "note": "Brief 3-6 word summary of enhancement in that language or English"
     },
     {
       "tone": "professional",
       "label": "Professional",
-      "text": "Rewritten sentence here",
-      "note": "Brief 3-6 word summary of enhancement"
+      "text": "Rewritten sentence here in original language",
+      "note": "Brief 3-6 word summary of enhancement in that language or English"
     },
     {
       "tone": "concise",
       "label": "Concise",
-      "text": "Rewritten sentence here",
-      "note": "Brief 3-6 word summary of enhancement"
+      "text": "Rewritten sentence here in original language",
+      "note": "Brief 3-6 word summary of enhancement in that language or English"
     }
   ]
 }`;

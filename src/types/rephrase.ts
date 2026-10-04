@@ -17,3 +17,7 @@ export interface GroqConfig {
   apiKey: string;
   model: string;
 }
+
+export interface RephraseOptions extends Partial<GroqConfig> {
+  language?: string;
+}

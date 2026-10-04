@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Header } from "./components/Header";
-import { Editor } from "./components/Editor";
+import { Editor, EditorHandle } from "./components/Editor";
 import { IssuesPanel } from "./components/IssuesPanel";
 import { StatusBar } from "./components/StatusBar";
 import { SettingsModal } from "./components/SettingsModal";
@@ -33,6 +33,22 @@ export default function App() {
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const editorRef = useRef<EditorHandle>(null);
+
+  // Active language name (e.g. "English (US)", "German", "Spanish", etc.)
+  const activeLanguageName = useMemo(() => {
+    if (language !== "auto") {
+      const found = languages.find(
+        (l) => l.code === language || l.longCode === language
+      );
+      return found?.name || language;
+    }
+    return detectedLanguage?.name || undefined;
+  }, [language, languages, detectedLanguage]);
+
+  const handleTriggerRephrase = useCallback(() => {
+    editorRef.current?.triggerRephrase();
+  }, []);
 
   // Load languages whenever apiUrl changes
   const loadLanguages = useCallback(async (currentUrl?: string) => {
@@ -218,6 +234,8 @@ export default function App() {
         detectedLanguage={detectedLanguage}
         isChecking={isChecking}
         onManualCheck={() => runCheck(text, language, apiUrl)}
+        onRephrase={handleTriggerRephrase}
+        hasText={text.trim().length > 0}
         onClearText={handleClearText}
         onCopyText={handleCopyText}
         isCopied={isCopied}
@@ -233,6 +251,7 @@ export default function App() {
       {/* Main Workspace: Editor + Review Panel */}
       <main className="flex-1 flex overflow-hidden relative">
         <Editor
+          ref={editorRef}
           text={text}
           onChangeText={setText}
           matches={visibleMatches}
@@ -242,6 +261,7 @@ export default function App() {
           onIgnoreMatch={handleIgnore}
           isChecking={isChecking}
           onOpenSettings={() => setIsSettingsOpen(true)}
+          languageName={activeLanguageName}
         />
 
         {showSidebar && (
@@ -269,6 +289,7 @@ export default function App() {
         detectedLanguageName={detectedLanguage?.name}
         apiUrl={apiUrl}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        onRephrase={text.trim().length > 0 ? handleTriggerRephrase : undefined}
       />
 
       {/* Settings Modal */}
