@@ -155,7 +155,7 @@ export const Editor: React.FC<EditorProps> = ({
   }, [text, activeMatches, selectedMatch]);
 
   return (
-    <div className="relative flex-1 h-full w-full bg-slate-900 overflow-hidden flex flex-col">
+    <div className="relative flex-1 h-full w-full bg-white dark:bg-slate-900 overflow-hidden flex flex-col transition-colors">
       {/* Editor Container */}
       <div className="relative flex-1 h-full w-full overflow-hidden">
         {/* Underlying Highlight Layer */}
@@ -190,7 +190,7 @@ export const Editor: React.FC<EditorProps> = ({
           placeholder="Paste or write your text here to check spelling, grammar, and style with LanguageTool..."
           spellCheck={false}
           autoFocus
-          className="absolute inset-0 w-full h-full p-6 md:p-8 font-sans text-base leading-relaxed tracking-normal whitespace-pre-wrap break-words overflow-y-auto bg-transparent text-slate-100 placeholder-slate-600 resize-none outline-none caret-sky-400 z-10 selection:bg-sky-500/30 selection:text-white"
+          className="absolute inset-0 w-full h-full p-6 md:p-8 font-sans text-base leading-relaxed tracking-normal whitespace-pre-wrap break-words overflow-y-auto bg-transparent text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 resize-none outline-none caret-sky-600 dark:caret-sky-400 z-10 selection:bg-sky-500/20 dark:selection:bg-sky-500/30 selection:text-slate-900 dark:selection:text-white"
         />
       </div>
 

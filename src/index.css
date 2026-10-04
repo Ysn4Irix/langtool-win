@@ -1,20 +1,33 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  color-scheme: dark;
+  color-scheme: light dark;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: #0f172a;
-  color: #f8fafc;
   user-select: none;
   overflow: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Custom Scrollbar */
+/* Light mode defaults */
+body {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Dark mode overrides */
+.dark body, body.dark {
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
+/* Custom Scrollbar - Light */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -23,18 +36,26 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #cbd5e1;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Custom Scrollbar - Dark */
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
   background: #475569;
 }
 
-/* Wavy squiggly underlines matching native spellcheckers */
+/* Wavy squiggly underlines */
 .squiggle-spelling {
   text-decoration-line: underline;
   text-decoration-style: wavy;
-  text-decoration-color: #ef4444; /* red-500 */
+  text-decoration-color: #dc2626; /* red-600 */
   text-decoration-thickness: 2.2px;
   text-underline-offset: 4px;
   cursor: pointer;
@@ -42,42 +63,57 @@ body {
   border-radius: 2px;
   transition: background-color 0.15s ease;
 }
+.dark .squiggle-spelling {
+  text-decoration-color: #ef4444; /* red-500 */
+  background-color: rgba(239, 68, 68, 0.12);
+}
 .squiggle-spelling:hover {
-  background-color: rgba(239, 68, 68, 0.22);
+  background-color: rgba(239, 68, 68, 0.2);
 }
 
 .squiggle-grammar {
   text-decoration-line: underline;
   text-decoration-style: wavy;
-  text-decoration-color: #f59e0b; /* amber-500 */
+  text-decoration-color: #d97706; /* amber-600 */
   text-decoration-thickness: 2.2px;
   text-underline-offset: 4px;
   cursor: pointer;
-  background-color: rgba(245, 158, 11, 0.08);
+  background-color: rgba(217, 119, 6, 0.08);
   border-radius: 2px;
   transition: background-color 0.15s ease;
 }
+.dark .squiggle-grammar {
+  text-decoration-color: #f59e0b; /* amber-500 */
+  background-color: rgba(245, 158, 11, 0.12);
+}
 .squiggle-grammar:hover {
-  background-color: rgba(245, 158, 11, 0.22);
+  background-color: rgba(245, 158, 11, 0.2);
 }
 
 .squiggle-style {
   text-decoration-line: underline;
   text-decoration-style: wavy;
-  text-decoration-color: #3b82f6; /* blue-500 */
+  text-decoration-color: #2563eb; /* blue-600 */
   text-decoration-thickness: 2.2px;
   text-underline-offset: 4px;
   cursor: pointer;
-  background-color: rgba(59, 130, 246, 0.08);
+  background-color: rgba(37, 99, 235, 0.08);
   border-radius: 2px;
   transition: background-color 0.15s ease;
 }
+.dark .squiggle-style {
+  text-decoration-color: #3b82f6; /* blue-500 */
+  background-color: rgba(59, 130, 246, 0.12);
+}
 .squiggle-style:hover {
-  background-color: rgba(59, 130, 246, 0.22);
+  background-color: rgba(59, 130, 246, 0.2);
 }
 
-/* Selected error pulse */
+/* Selected error indicator */
 .squiggle-selected {
-  outline: 2px solid rgba(147, 197, 253, 0.6);
+  outline: 2px solid rgba(59, 130, 246, 0.5);
   border-radius: 3px;
+}
+.dark .squiggle-selected {
+  outline: 2px solid rgba(147, 197, 253, 0.6);
 }

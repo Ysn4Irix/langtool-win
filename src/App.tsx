@@ -3,13 +3,17 @@ import { Header } from "./components/Header";
 import { Editor } from "./components/Editor";
 import { IssuesPanel } from "./components/IssuesPanel";
 import { StatusBar } from "./components/StatusBar";
+import { SettingsModal } from "./components/SettingsModal";
 import { Language, Match, DetectedLanguage } from "./types/langtool";
-import { getLanguages, checkText } from "./services/langtoolApi";
+import { getLanguages, checkText, getStoredApiUrl } from "./services/langtoolApi";
 import { applyReplacement, applyAllReplacements, getStats } from "./utils/textUtils";
+import { useTheme } from "./utils/useTheme";
 
 const INITIAL_SAMPLE_TEXT = `This are a test for spelling and grammer mistaks. She have a apple every morning because it keep the doctor away. LanguageTool help you find mistakes that simple spell check cannot detects.`;
 
 export default function App() {
+  const { theme, resolvedTheme, setTheme, toggleTheme } = useTheme();
+
   const [text, setText] = useState<string>(INITIAL_SAMPLE_TEXT);
   const [language, setLanguage] = useState<string>("auto");
   const [languages, setLanguages] = useState<Language[]>([]);
@@ -21,26 +25,31 @@ export default function App() {
   const [apiConnected, setApiConnected] = useState<boolean>(true);
   const [showSidebar, setShowSidebar] = useState<boolean>(true);
   const [isCopied, setIsCopied] = useState<boolean>(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const [apiUrl, setApiUrl] = useState<string>(getStoredApiUrl);
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Fetch languages on mount
-  useEffect(() => {
-    getLanguages()
-      .then((langs) => {
-        setLanguages(langs);
-        setApiConnected(true);
-      })
-      .catch((err) => {
-        console.error("Failed to load languages:", err);
-        setApiConnected(false);
-      });
+  // Load languages whenever apiUrl changes
+  const loadLanguages = useCallback(async (currentUrl?: string) => {
+    try {
+      const langs = await getLanguages(currentUrl);
+      setLanguages(langs);
+      setApiConnected(true);
+    } catch (err) {
+      console.error("Failed to load languages:", err);
+      setApiConnected(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadLanguages(apiUrl);
+  }, [apiUrl, loadLanguages]);
 
   // Perform API check
   const runCheck = useCallback(
-    async (textToCheck: string, langToCheck: string) => {
+    async (textToCheck: string, langToCheck: string, endpointUrl?: string) => {
       if (!textToCheck.trim()) {
         setMatches([]);
         setIsChecking(false);
@@ -58,7 +67,8 @@ export default function App() {
         const response = await checkText(
           textToCheck,
           langToCheck,
-          abortControllerRef.current.signal
+          abortControllerRef.current.signal,
+          endpointUrl || apiUrl
         );
 
         setApiConnected(true);
@@ -78,7 +88,7 @@ export default function App() {
         setIsChecking(false);
       }
     },
-    [ignoredIds]
+    [apiUrl, ignoredIds]
   );
 
   // Debounced check on text or language change (500ms debounce)
@@ -88,7 +98,7 @@ export default function App() {
     }
 
     debounceTimerRef.current = setTimeout(() => {
-      runCheck(text, language);
+      runCheck(text, language, apiUrl);
     }, 500);
 
     return () => {
@@ -96,7 +106,7 @@ export default function App() {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [text, language, runCheck]);
+  }, [text, language, apiUrl, runCheck]);
 
   // Global Keyboard Shortcuts
   useEffect(() => {
@@ -104,20 +114,25 @@ export default function App() {
       // Ctrl+Enter -> Manual check
       if (e.ctrlKey && e.key === "Enter") {
         e.preventDefault();
-        runCheck(text, language);
+        runCheck(text, language, apiUrl);
       }
       // Ctrl+Shift+C -> Copy text
       if (e.ctrlKey && e.shiftKey && (e.key === "c" || e.key === "C")) {
         e.preventDefault();
         handleCopyText();
       }
+      // Ctrl+, -> Open settings
+      if (e.ctrlKey && e.key === ",") {
+        e.preventDefault();
+        setIsSettingsOpen(true);
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [text, language, runCheck]);
+  }, [text, language, apiUrl, runCheck]);
 
-  // Actions
+  // Handlers
   const handleApplyReplacement = (match: Match, replacement: string) => {
     const newText = applyReplacement(text, match, replacement);
     setText(newText);
@@ -155,6 +170,12 @@ export default function App() {
     }
   };
 
+  const handleApiUrlChanged = (newUrl: string) => {
+    setApiUrl(newUrl);
+    loadLanguages(newUrl);
+    runCheck(text, language, newUrl);
+  };
+
   const visibleMatches = matches.filter((m) => !ignoredIds.has(m.id));
 
   const issueCounts = {
@@ -167,7 +188,7 @@ export default function App() {
   const stats = getStats(text);
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 overflow-hidden font-sans">
+    <div className="flex flex-col h-screen w-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden font-sans transition-colors">
       {/* Top Header */}
       <Header
         languages={languages}
@@ -175,13 +196,17 @@ export default function App() {
         onSelectLanguage={setLanguage}
         detectedLanguage={detectedLanguage}
         isChecking={isChecking}
-        onManualCheck={() => runCheck(text, language)}
+        onManualCheck={() => runCheck(text, language, apiUrl)}
         onClearText={handleClearText}
         onCopyText={handleCopyText}
         isCopied={isCopied}
         showSidebar={showSidebar}
         onToggleSidebar={() => setShowSidebar(!showSidebar)}
         issueCounts={issueCounts}
+        theme={theme}
+        resolvedTheme={resolvedTheme}
+        onToggleTheme={toggleTheme}
+        onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
       {/* Main Workspace: Editor + Review Panel */}
@@ -220,6 +245,17 @@ export default function App() {
         issueCount={issueCounts.total}
         apiConnected={apiConnected}
         detectedLanguageName={detectedLanguage?.name}
+        apiUrl={apiUrl}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+      />
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        currentTheme={theme}
+        onSelectTheme={setTheme}
+        onApiUrlChanged={handleApiUrlChanged}
       />
     </div>
   );

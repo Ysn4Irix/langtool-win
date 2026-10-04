@@ -11,6 +11,8 @@ Build a lightweight, high-performance Windows desktop application using Tauri v2
 - [x] Task 5: Build Language Selector (with auto-detect and 60+ searchable languages) and Status Bar (word count, char count, error badge summary) → Verify: Language changes trigger re-check, and stats update live.
 - [x] Task 6: Configure Windows desktop shell, System Tray icon, and keyboard shortcuts (`Ctrl+Enter` check, `Ctrl+Shift+L` summon, minimize to tray on close) → Verify: Window minimizes cleanly to tray and restores on click.
 - [x] Task 7: End-to-end verification, styling polish, and Windows build test → Verify: App runs smoothly, consumes <30MB RAM, and passes quality audit.
+- [x] Task 8: Implement Light Mode & Theme Engine (System / Light / Dark) with 1-click header toggle → Verify: Switching themes updates colors, squiggles, and popovers seamlessly.
+- [x] Task 9: Implement Settings Modal with Custom API URL configuration & live connection tester → Verify: Custom URLs can be tested with `/languages`, persisted, and reset to default.
 
 ## Done When
 - [x] The app launches as a native lightweight Windows app with zero bloat.
@@ -19,6 +21,8 @@ Build a lightweight, high-performance Windows desktop application using Tauri v2
 - [x] Clicking an underlined word shows replacements and clicking a replacement updates the text.
 - [x] Language detection and selection works smoothly.
 - [x] System tray minimize works properly.
+- [x] Light mode, Dark mode, and System theme synchronization work smoothly.
+- [x] API URL can be customized, tested, and saved in settings.
 
 ## Key Decisions & Edge Cases
 1. **Underline Behavior**: Clear underline on the word being actively edited, refresh all wavy squiggles 500ms after user pauses typing to prevent misaligned visual jitter.

@@ -1,6 +1,78 @@
 import { CheckResponse, Language, Match, IssueCategoryType } from "../types/langtool";
 
-const BASE_URL = "https://langtool.ysnirix.xyz/v2";
+export const DEFAULT_API_URL = "https://langtool.ysnirix.xyz/v2";
+const STORAGE_KEY = "langtool_api_url";
+
+export function normalizeApiUrl(url: string): string {
+  let cleaned = url.trim().replace(/\/+$/, "");
+  if (!cleaned) return DEFAULT_API_URL;
+  // If user didn't include /v2, check or append if needed, but allow whatever they entered
+  return cleaned;
+}
+
+export function getStoredApiUrl(): string {
+  if (typeof window === "undefined") return DEFAULT_API_URL;
+  const saved = localStorage.getItem(STORAGE_KEY);
+  return saved ? normalizeApiUrl(saved) : DEFAULT_API_URL;
+}
+
+export function setStoredApiUrl(url: string): void {
+  const normalized = normalizeApiUrl(url);
+  localStorage.setItem(STORAGE_KEY, normalized);
+  cachedLanguages = null; // Clear cached languages so they reload from new endpoint
+}
+
+export function resetStoredApiUrl(): string {
+  localStorage.removeItem(STORAGE_KEY);
+  cachedLanguages = null;
+  return DEFAULT_API_URL;
+}
+
+export async function testApiConnection(
+  testUrl: string
+): Promise<{ success: boolean; message: string; count?: number }> {
+  const normalized = normalizeApiUrl(testUrl);
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6000);
+
+    const res = await fetch(`${normalized}/languages`, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+
+    if (!res.ok) {
+      return {
+        success: false,
+        message: `HTTP ${res.status}: ${res.statusText}`,
+      };
+    }
+
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      return {
+        success: true,
+        message: `Successfully connected (${data.length} languages supported)`,
+        count: data.length,
+      };
+    }
+
+    return {
+      success: false,
+      message: "Server responded, but response format was unexpected",
+    };
+  } catch (err: any) {
+    if (err.name === "AbortError") {
+      return { success: false, message: "Connection timed out (after 6s)" };
+    }
+    return {
+      success: false,
+      message: err.message || "Failed to connect to the server",
+    };
+  }
+}
 
 export function categorizeMatch(match: {
   rule?: { issueType?: string; category?: { id?: string } };
@@ -33,13 +105,14 @@ export function categorizeMatch(match: {
 
 let cachedLanguages: Language[] | null = null;
 
-export async function getLanguages(): Promise<Language[]> {
-  if (cachedLanguages && cachedLanguages.length > 0) {
+export async function getLanguages(baseUrl?: string): Promise<Language[]> {
+  const url = baseUrl ? normalizeApiUrl(baseUrl) : getStoredApiUrl();
+  if (cachedLanguages && cachedLanguages.length > 0 && !baseUrl) {
     return cachedLanguages;
   }
 
   try {
-    const res = await fetch(`${BASE_URL}/languages`, {
+    const res = await fetch(`${url}/languages`, {
       method: "GET",
       headers: {
         Accept: "application/json",
@@ -51,7 +124,9 @@ export async function getLanguages(): Promise<Language[]> {
     }
 
     const data: Language[] = await res.json();
-    cachedLanguages = data;
+    if (!baseUrl) {
+      cachedLanguages = data;
+    }
     return data;
   } catch (err) {
     console.error("Failed to fetch languages:", err);
@@ -70,7 +145,8 @@ export async function getLanguages(): Promise<Language[]> {
 export async function checkText(
   text: string,
   language: string = "auto",
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  baseUrl?: string
 ): Promise<CheckResponse> {
   if (!text.trim()) {
     return {
@@ -80,11 +156,12 @@ export async function checkText(
     };
   }
 
+  const url = baseUrl ? normalizeApiUrl(baseUrl) : getStoredApiUrl();
   const params = new URLSearchParams();
   params.append("text", text);
   params.append("language", language);
 
-  const response = await fetch(`${BASE_URL}/check`, {
+  const response = await fetch(`${url}/check`, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",

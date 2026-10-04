@@ -7,6 +7,14 @@ A high-performance, ultra-lightweight Windows desktop application designed for r
 ## ✨ Features
 
 - 🪶 **Ultra-Lightweight & Fast**: Powered by native Windows Edge WebView2 (~20–30 MB RAM footprint, instantaneous startup).
+- ☀️/🌙 **Light & Dark Mode**:
+  - Full support for **Light Mode** (paper-clean canvas) and **Dark Mode** (midnight slate).
+  - 3-state system preference: **System Default** (syncs with Windows OS mode), **Light**, or **Dark**.
+  - 1-click **Sun/Moon** toggle directly in the header bar.
+- ⚙️ **Configurable LanguageTool API URL**:
+  - Point to any remote server or local Docker instance (`http://localhost:8010/v2`).
+  - Built-in **"Test Connection"** diagnostic pinging `/v2/languages` before saving.
+  - "Reset to Default" button returning to `https://langtool.ysnirix.xyz/v2`.
 - 〰️ **Native-Feel Wavy Underlines**:
   - 🔴 **Red wavy squiggle**: Spelling mistakes & typos (`misspelling`, `UnknownWord`)
   - 🟠 **Amber/Yellow wavy squiggle**: Grammar issues & punctuation (`grammar`, `GRAMMAR`)
@@ -28,8 +36,9 @@ A high-performance, ultra-lightweight Windows desktop application designed for r
 - ⌨️ **Keyboard Shortcuts**:
   - `Ctrl + Enter`: Trigger manual text check
   - `Ctrl + Shift + C`: Copy corrected text to clipboard
+  - `Ctrl + ,`: Open Settings dialog (API URL, Theme)
   - `Ctrl + Shift + L`: Summon app to front (global Windows hotkey)
-  - `Esc`: Close open suggestion popover
+  - `Esc`: Close open suggestion popover or Settings dialog
 
 ---
 
