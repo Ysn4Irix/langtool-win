@@ -26,6 +26,7 @@ interface RephraseModalProps {
   onClose: () => void;
   sentenceInfo: RephraseSentenceInfo | null;
   languageName?: string;
+  isRtl?: boolean;
   onApply: (replacement: string) => void;
   onOpenSettings: () => void;
 }
@@ -35,6 +36,7 @@ export const RephraseModal: React.FC<RephraseModalProps> = ({
   onClose,
   sentenceInfo,
   languageName,
+  isRtl = false,
   onApply,
   onOpenSettings,
 }) => {
@@ -162,7 +164,12 @@ export const RephraseModal: React.FC<RephraseModalProps> = ({
           <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-400 mb-1">
             Original Sentence
           </div>
-          <p className="text-sm text-slate-700 dark:text-slate-300 font-medium leading-relaxed italic">
+          <p
+            dir={isRtl ? "rtl" : "auto"}
+            className={`text-sm text-slate-700 dark:text-slate-300 font-medium leading-relaxed italic ${
+              isRtl ? "text-right" : "text-left"
+            }`}
+          >
             "{sentenceInfo.text}"
           </p>
         </div>
@@ -348,7 +355,12 @@ export const RephraseModal: React.FC<RephraseModalProps> = ({
                     </div>
 
                     {/* Rewritten Text */}
-                    <p className="text-sm text-slate-800 dark:text-slate-100 font-medium leading-relaxed">
+                    <p
+                      dir={isRtl ? "rtl" : "auto"}
+                      className={`text-sm text-slate-800 dark:text-slate-100 font-medium leading-relaxed ${
+                        isRtl ? "text-right" : "text-left"
+                      }`}
+                    >
                       {item.text}
                     </p>
                   </div>

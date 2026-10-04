@@ -9,6 +9,7 @@ interface SuggestionPopoverProps {
   onIgnore: (matchId: string) => void;
   onClose: () => void;
   onRephraseSentence?: (sentence: string) => void;
+  isRtl?: boolean;
 }
 
 export const SuggestionPopover: React.FC<SuggestionPopoverProps> = ({
@@ -18,6 +19,7 @@ export const SuggestionPopover: React.FC<SuggestionPopoverProps> = ({
   onIgnore,
   onClose,
   onRephraseSentence,
+  isRtl = false,
 }) => {
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -71,11 +73,14 @@ export const SuggestionPopover: React.FC<SuggestionPopoverProps> = ({
   return (
     <div
       ref={popoverRef}
+      dir={isRtl ? "rtl" : "ltr"}
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
       }}
-      className="fixed z-50 w-80 max-w-[90vw] -translate-x-1/2 bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-700/80 rounded-xl shadow-2xl backdrop-blur-md p-3.5 text-xs text-slate-800 dark:text-slate-200 animate-in fade-in zoom-in-95 duration-150 select-none"
+      className={`fixed z-50 w-80 max-w-[90vw] -translate-x-1/2 bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-700/80 rounded-xl shadow-2xl backdrop-blur-md p-3.5 text-xs text-slate-800 dark:text-slate-200 animate-in fade-in zoom-in-95 duration-150 select-none ${
+        isRtl ? "text-right" : "text-left"
+      }`}
     >
       {/* Header */}
       <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
@@ -98,7 +103,7 @@ export const SuggestionPopover: React.FC<SuggestionPopoverProps> = ({
       </div>
 
       {/* Explanation */}
-      <p className="py-2.5 text-slate-700 dark:text-slate-300 leading-relaxed text-xs">
+      <p dir="auto" className="py-2.5 text-slate-700 dark:text-slate-300 leading-relaxed text-xs">
         {match.message}
       </p>
 
@@ -107,16 +112,17 @@ export const SuggestionPopover: React.FC<SuggestionPopoverProps> = ({
         <div className="mt-1">
           <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
             <Sparkles className="w-3 h-3 text-sky-500" />
-            Suggestions
+            <span>Suggestions</span>
           </div>
           <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto py-0.5">
             {match.replacements.slice(0, 6).map((rep, idx) => (
               <button
                 key={idx}
+                dir="auto"
                 onClick={() => onApplyReplacement(rep.value)}
                 className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 dark:bg-emerald-500/15 dark:hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-medium transition-all shadow-sm active:scale-95 text-left"
               >
-                <span>{rep.value}</span>
+                <span dir="auto">{rep.value}</span>
                 <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400 opacity-60 group-hover:opacity-100 transition-opacity" />
               </button>
             ))}

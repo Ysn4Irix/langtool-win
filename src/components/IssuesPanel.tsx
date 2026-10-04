@@ -10,6 +10,7 @@ interface IssuesPanelProps {
   onApplyAll: () => void;
   onIgnore: (matchId: string) => void;
   onClose: () => void;
+  isRtl?: boolean;
 }
 
 export const IssuesPanel: React.FC<IssuesPanelProps> = ({
@@ -20,6 +21,7 @@ export const IssuesPanel: React.FC<IssuesPanelProps> = ({
   onApplyAll,
   onIgnore,
   onClose,
+  isRtl = false,
 }) => {
   const [filter, setFilter] = useState<"all" | IssueCategoryType>("all");
 
@@ -162,13 +164,18 @@ export const IssuesPanel: React.FC<IssuesPanelProps> = ({
                 </div>
 
                 {/* Explanation */}
-                <p className="text-slate-800 dark:text-slate-200 text-xs leading-relaxed my-1.5 font-normal">
+                <p dir="auto" className="text-slate-800 dark:text-slate-200 text-xs leading-relaxed my-1.5 font-normal">
                   {m.message}
                 </p>
 
                 {/* Context snippet */}
                 {m.context?.text && (
-                  <div className="my-2 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-950 text-[11px] text-slate-700 dark:text-slate-300 font-mono truncate border border-slate-200 dark:border-slate-800">
+                  <div
+                    dir={isRtl ? "rtl" : "auto"}
+                    className={`my-2 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-950 text-[11px] text-slate-700 dark:text-slate-300 font-mono truncate border border-slate-200 dark:border-slate-800 ${
+                      isRtl ? "text-right" : "text-left"
+                    }`}
+                  >
                     {m.context.text}
                   </div>
                 )}
@@ -179,13 +186,14 @@ export const IssuesPanel: React.FC<IssuesPanelProps> = ({
                     {m.replacements.slice(0, 4).map((rep, idx) => (
                       <button
                         key={idx}
+                        dir="auto"
                         onClick={(e) => {
                           e.stopPropagation();
                           onApplyReplacement(m, rep.value);
                         }}
                         className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 dark:bg-emerald-500/15 dark:hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-medium transition-all text-xs active:scale-95"
                       >
-                        <span>{rep.value}</span>
+                        <span dir="auto">{rep.value}</span>
                         <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400 opacity-60" />
                       </button>
                     ))}

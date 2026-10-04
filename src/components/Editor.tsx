@@ -20,6 +20,7 @@ interface EditorProps {
   isChecking: boolean;
   onOpenSettings: () => void;
   languageName?: string;
+  isRtl?: boolean;
 }
 
 export const Editor = React.forwardRef<EditorHandle, EditorProps>(
@@ -34,6 +35,7 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
       onIgnoreMatch,
       onOpenSettings,
       languageName,
+      isRtl = false,
     },
     ref
   ) => {
@@ -226,8 +228,11 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
           {/* Underlying Highlight Layer */}
           <div
             ref={backdropRef}
+            dir={isRtl ? "rtl" : "ltr"}
             aria-hidden="true"
-            className="absolute inset-0 p-6 md:p-8 font-sans text-base leading-relaxed tracking-normal whitespace-pre-wrap break-words overflow-y-auto pointer-events-none select-none text-transparent z-0"
+            className={`absolute inset-0 p-6 md:p-8 font-sans text-base leading-relaxed tracking-normal whitespace-pre-wrap break-words overflow-y-auto pointer-events-none select-none text-transparent z-0 ${
+              isRtl ? "text-right" : "text-left"
+            }`}
           >
             {renderedBackdrop}
             {text.endsWith("\n") && <br />}
@@ -236,6 +241,7 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
           {/* Top Textarea Layer */}
           <textarea
             ref={textareaRef}
+            dir={isRtl ? "rtl" : "ltr"}
             value={text}
             onChange={(e) => {
               onChangeText(e.target.value);
@@ -245,10 +251,16 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
             onClick={handleTextareaClick}
             onKeyUp={updateCaret}
             onSelect={updateCaret}
-            placeholder="Paste or write your text here to check spelling, grammar, and style with LanguageTool..."
+            placeholder={
+              isRtl
+                ? "اكتب أو الصق النص هنا للتحقق من الأخطاء الإملائية والنحوية والأسلوب..."
+                : "Paste or write your text here to check spelling, grammar, and style with LanguageTool..."
+            }
             spellCheck={false}
             autoFocus
-            className="absolute inset-0 w-full h-full p-6 md:p-8 font-sans text-base leading-relaxed tracking-normal whitespace-pre-wrap break-words overflow-y-auto bg-transparent text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 resize-none outline-none caret-sky-600 dark:caret-sky-400 z-10 selection:bg-sky-500/20 dark:selection:bg-sky-500/30 selection:text-slate-900 dark:selection:text-white"
+            className={`absolute inset-0 w-full h-full p-6 md:p-8 font-sans text-base leading-relaxed tracking-normal whitespace-pre-wrap break-words overflow-y-auto bg-transparent text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 resize-none outline-none caret-sky-600 dark:caret-sky-400 z-10 selection:bg-sky-500/20 dark:selection:bg-sky-500/30 selection:text-slate-900 dark:selection:text-white ${
+              isRtl ? "text-right" : "text-left"
+            }`}
           />
         </div>
 
@@ -257,6 +269,7 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
           <SuggestionPopover
             match={selectedMatch}
             position={popoverPosition}
+            isRtl={isRtl}
             onApplyReplacement={(rep) => {
               onApplyReplacement(selectedMatch, rep);
               onSelectMatch(null);
@@ -276,6 +289,7 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
           onClose={() => setIsRephraseModalOpen(false)}
           sentenceInfo={activeSentenceInfo}
           languageName={languageName}
+          isRtl={isRtl}
           onApply={handleApplyRephrase}
           onOpenSettings={onOpenSettings}
         />

@@ -8,6 +8,7 @@ import { Language, Match, DetectedLanguage } from "./types/langtool";
 import { getLanguages, checkText, getStoredApiUrl } from "./services/langtoolApi";
 import { applyReplacement, applyAllReplacements, getStats } from "./utils/textUtils";
 import { useTheme } from "./utils/useTheme";
+import { computeIsRtl } from "./utils/rtlUtils";
 
 const STORAGE_TEXT_KEY = "langtool_user_text";
 
@@ -45,6 +46,32 @@ export default function App() {
     }
     return detectedLanguage?.name || undefined;
   }, [language, languages, detectedLanguage]);
+
+  // Direction override: null (auto based on language/content) | "rtl" | "ltr"
+  const [directionOverride, setDirectionOverride] = useState<"rtl" | "ltr" | null>(null);
+
+  // Compute active writing direction (RTL vs LTR)
+  const isRtl = useMemo(() => {
+    if (directionOverride !== null) {
+      return directionOverride === "rtl";
+    }
+    return computeIsRtl(language, detectedLanguage?.code, text);
+  }, [directionOverride, language, detectedLanguage, text]);
+
+  const handleSelectLanguage = useCallback((newLang: string) => {
+    setLanguage(newLang);
+    setDirectionOverride(null); // Reset manual override so the new language takes over
+  }, []);
+
+  const handleToggleRtl = useCallback(() => {
+    setDirectionOverride((prev) => {
+      const current =
+        prev !== null
+          ? prev === "rtl"
+          : computeIsRtl(language, detectedLanguage?.code, text);
+      return current ? "ltr" : "rtl";
+    });
+  }, [language, detectedLanguage, text]);
 
   const handleTriggerRephrase = useCallback(() => {
     editorRef.current?.triggerRephrase();
@@ -155,6 +182,11 @@ export default function App() {
         e.preventDefault();
         handleCopyText();
       }
+      // Ctrl+Shift+D -> Toggle RTL/LTR direction
+      if (e.ctrlKey && e.shiftKey && (e.key === "d" || e.key === "D")) {
+        e.preventDefault();
+        handleToggleRtl();
+      }
       // Ctrl+, -> Open settings
       if (e.ctrlKey && e.key === ",") {
         e.preventDefault();
@@ -164,7 +196,7 @@ export default function App() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [text, language, apiUrl, runCheck]);
+  }, [text, language, apiUrl, runCheck, handleToggleRtl]);
 
   // Handlers
   const handleApplyReplacement = (match: Match, replacement: string) => {
@@ -230,7 +262,7 @@ export default function App() {
       <Header
         languages={languages}
         selectedLanguage={language}
-        onSelectLanguage={setLanguage}
+        onSelectLanguage={handleSelectLanguage}
         detectedLanguage={detectedLanguage}
         isChecking={isChecking}
         onManualCheck={() => runCheck(text, language, apiUrl)}
@@ -246,6 +278,8 @@ export default function App() {
         resolvedTheme={resolvedTheme}
         onToggleTheme={toggleTheme}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        isRtl={isRtl}
+        onToggleRtl={handleToggleRtl}
       />
 
       {/* Main Workspace: Editor + Review Panel */}
@@ -262,6 +296,7 @@ export default function App() {
           isChecking={isChecking}
           onOpenSettings={() => setIsSettingsOpen(true)}
           languageName={activeLanguageName}
+          isRtl={isRtl}
         />
 
         {showSidebar && (
@@ -273,6 +308,7 @@ export default function App() {
             onApplyAll={handleApplyAll}
             onIgnore={handleIgnore}
             onClose={() => setShowSidebar(false)}
+            isRtl={isRtl}
           />
         )}
       </main>
@@ -290,6 +326,7 @@ export default function App() {
         apiUrl={apiUrl}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onRephrase={text.trim().length > 0 ? handleTriggerRephrase : undefined}
+        isRtl={isRtl}
       />
 
       {/* Settings Modal */}
