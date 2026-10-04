@@ -24,6 +24,18 @@ interface EditorProps {
   isRtl?: boolean;
 }
 
+/**
+ * Computes the cursor offset at the end of the sentence/text.
+ * Clamps to the end of sentence content if text ends with trailing newlines.
+ */
+function getEndOfSentenceOffset(content: string): number {
+  if (!content) return 0;
+  if (content.endsWith("\n") || content.endsWith("\r\n")) {
+    return content.trimEnd().length;
+  }
+  return content.length;
+}
+
 export const Editor = React.forwardRef<EditorHandle, EditorProps>(
   (
     {
@@ -65,6 +77,55 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
       if (textareaRef.current) {
         setCaretPosition(textareaRef.current.selectionStart);
         setSelectionEnd(textareaRef.current.selectionEnd);
+      }
+    };
+
+    const initialCursorSetRef = useRef<boolean>(false);
+    const isMouseDownRef = useRef<boolean>(false);
+
+    // If text is already in the editor on load/mount, move the cursor to the end of the sentence
+    useEffect(() => {
+      if (initialCursorSetRef.current) return;
+      if (!textareaRef.current) return;
+
+      if (text && text.trim().length > 0) {
+        initialCursorSetRef.current = true;
+        const targetPos = getEndOfSentenceOffset(text);
+
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(targetPos, targetPos);
+        setCaretPosition(targetPos);
+        setSelectionEnd(targetPos);
+
+        const timer = setTimeout(() => {
+          if (textareaRef.current) {
+            textareaRef.current.focus();
+            textareaRef.current.setSelectionRange(targetPos, targetPos);
+            setCaretPosition(targetPos);
+            setSelectionEnd(targetPos);
+          }
+        }, 10);
+
+        return () => clearTimeout(timer);
+      }
+    }, [text]);
+
+    const handleFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+      // If editor has text and focus was placed at 0 via keyboard/autofocus (not mouse click),
+      // ensure cursor is moved to the end of the sentence
+      if (
+        !isMouseDownRef.current &&
+        text &&
+        text.trim().length > 0 &&
+        e.target.selectionStart === 0 &&
+        e.target.selectionEnd === 0
+      ) {
+        const targetPos = getEndOfSentenceOffset(text);
+        e.target.setSelectionRange(targetPos, targetPos);
+        setCaretPosition(targetPos);
+        setSelectionEnd(targetPos);
+      } else {
+        updateCaret();
       }
     };
 
@@ -209,7 +270,16 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
       if (!activeSentenceInfo) return;
       const updated = replaceSentenceInText(text, activeSentenceInfo, newSentence);
       onChangeText(updated);
+      const targetPos = activeSentenceInfo.start + newSentence.length;
       setActiveSentenceInfo(null);
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          textareaRef.current.setSelectionRange(targetPos, targetPos);
+          setCaretPosition(targetPos);
+          setSelectionEnd(targetPos);
+        }
+      }, 40);
     };
 
     const handleRephraseFromPopover = (sentenceText: string) => {
@@ -256,6 +326,14 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
               updateCaret();
             }}
             onScroll={handleScroll}
+            onMouseDown={() => {
+              isMouseDownRef.current = true;
+            }}
+            onMouseUp={() => {
+              isMouseDownRef.current = false;
+              updateCaret();
+            }}
+            onFocus={handleFocus}
             onClick={handleTextareaClick}
             onKeyUp={updateCaret}
             onSelect={updateCaret}
@@ -281,6 +359,15 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
             onApplyReplacement={(rep) => {
               onApplyReplacement(selectedMatch, rep);
               onSelectMatch(null);
+              const targetPos = selectedMatch.offset + rep.length;
+              setTimeout(() => {
+                if (textareaRef.current) {
+                  textareaRef.current.focus();
+                  textareaRef.current.setSelectionRange(targetPos, targetPos);
+                  setCaretPosition(targetPos);
+                  setSelectionEnd(targetPos);
+                }
+              }, 40);
             }}
             onIgnore={(id) => {
               onIgnoreMatch(id);
