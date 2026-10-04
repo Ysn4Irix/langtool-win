@@ -131,5 +131,62 @@ body {
 }
 
 .animate-toast {
-  animation: toast-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: toast-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Sidebar panel slide-in */
+@keyframes sidebar-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(1.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-sidebar-in {
+  animation: sidebar-slide-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Popover & modal pop-in */
+@keyframes modal-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-modal-in {
+  animation: modal-scale-in 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Card reveal animation */
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-card-in {
+  animation: card-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Global button focus-visible accessibility */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid rgba(14, 165, 233, 0.6);
+  outline-offset: 1px;
 }

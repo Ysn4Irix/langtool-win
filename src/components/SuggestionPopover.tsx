@@ -78,7 +78,7 @@ export const SuggestionPopover: React.FC<SuggestionPopoverProps> = ({
         top: `${position.top}px`,
         left: `${position.left}px`,
       }}
-      className={`fixed z-50 w-80 max-w-[90vw] -translate-x-1/2 bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-700/80 rounded-xl shadow-2xl backdrop-blur-md p-3.5 text-xs text-slate-800 dark:text-slate-200 animate-in fade-in zoom-in-95 duration-150 select-none ${
+      className={`fixed z-50 w-80 max-w-[90vw] -translate-x-1/2 bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-700/80 rounded-2xl shadow-2xl shadow-slate-900/15 dark:shadow-black/70 backdrop-blur-xl p-3.5 text-xs text-slate-800 dark:text-slate-200 animate-modal-in select-none ${
         isRtl ? "text-right" : "text-left"
       }`}
     >
@@ -96,7 +96,7 @@ export const SuggestionPopover: React.FC<SuggestionPopoverProps> = ({
         </div>
         <button
           onClick={onClose}
-          className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-150 active:scale-90"
         >
           <X className="w-3.5 h-3.5" />
         </button>
@@ -120,10 +120,10 @@ export const SuggestionPopover: React.FC<SuggestionPopoverProps> = ({
                 key={idx}
                 dir="auto"
                 onClick={() => onApplyReplacement(rep.value)}
-                className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 dark:bg-emerald-500/15 dark:hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-medium transition-all shadow-sm active:scale-95 text-left"
+                className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 dark:bg-emerald-500/15 dark:hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-medium transition-all duration-150 shadow-xs hover:shadow hover:scale-[1.02] active:scale-95 text-left"
               >
                 <span dir="auto">{rep.value}</span>
-                <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400 opacity-60 group-hover:opacity-100 transition-opacity" />
+                <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400 opacity-60 group-hover:opacity-100 transition-all duration-150 group-hover:scale-110" />
               </button>
             ))}
           </div>
@@ -139,9 +139,9 @@ export const SuggestionPopover: React.FC<SuggestionPopoverProps> = ({
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => onIgnore(match.id)}
-            className="flex items-center gap-1 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors py-1 px-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="group flex items-center gap-1 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 transition-all duration-150 py-1 px-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 active:scale-95"
           >
-            <Ban className="w-3 h-3 text-slate-400 dark:text-slate-500" />
+            <Ban className="w-3 h-3 text-slate-400 dark:text-slate-500 group-hover:text-rose-500 transition-colors" />
             <span>Ignore</span>
           </button>
 
@@ -151,9 +151,9 @@ export const SuggestionPopover: React.FC<SuggestionPopoverProps> = ({
                 onRephraseSentence(match.sentence);
                 onClose();
               }}
-              className="flex items-center gap-1 text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-medium py-1 px-1.5 rounded hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors"
+              className="group flex items-center gap-1 text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-medium py-1 px-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-all duration-150 active:scale-95"
             >
-              <Sparkles className="w-3 h-3 text-amber-500" />
+              <Sparkles className="w-3 h-3 text-amber-500 transition-transform duration-200 group-hover:rotate-12 group-hover:scale-110" />
               <span>Rephrase</span>
             </button>
           )}

@@ -183,7 +183,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-xl rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl p-6 text-slate-800 dark:text-slate-100 animate-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col"
+        className="relative w-full max-w-xl rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl p-6 text-slate-800 dark:text-slate-100 animate-modal-in max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -201,7 +201,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-150 active:scale-90"
           >
             <X className="w-4 h-4" />
           </button>
@@ -219,13 +219,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <button
                 type="button"
                 onClick={() => onSelectTheme("system")}
-                className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border text-xs font-medium transition-all ${
+                className={`group flex flex-col items-center justify-center gap-2 p-3 rounded-xl border text-xs font-medium transition-all duration-150 hover:-translate-y-0.5 active:scale-95 cursor-pointer ${
                   currentTheme === "system"
-                    ? "border-sky-500 bg-sky-50/60 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300 shadow-sm"
-                    : "border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-300"
+                    ? "border-sky-500 bg-sky-50/60 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300 shadow-sm ring-1 ring-sky-500/40"
+                    : "border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-300 shadow-2xs hover:shadow-sm"
                 }`}
               >
-                <Laptop className="w-5 h-5" />
+                <Laptop className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
                 <span>System</span>
               </button>
 
@@ -233,13 +233,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <button
                 type="button"
                 onClick={() => onSelectTheme("light")}
-                className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border text-xs font-medium transition-all ${
+                className={`group flex flex-col items-center justify-center gap-2 p-3 rounded-xl border text-xs font-medium transition-all duration-150 hover:-translate-y-0.5 active:scale-95 cursor-pointer ${
                   currentTheme === "light"
-                    ? "border-sky-500 bg-sky-50/60 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300 shadow-sm"
-                    : "border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-300"
+                    ? "border-sky-500 bg-sky-50/60 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300 shadow-sm ring-1 ring-sky-500/40"
+                    : "border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-300 shadow-2xs hover:shadow-sm"
                 }`}
               >
-                <Sun className="w-5 h-5 text-amber-500" />
+                <Sun className="w-5 h-5 text-amber-500 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-45" />
                 <span>Light</span>
               </button>
 
@@ -247,13 +247,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <button
                 type="button"
                 onClick={() => onSelectTheme("dark")}
-                className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border text-xs font-medium transition-all ${
+                className={`group flex flex-col items-center justify-center gap-2 p-3 rounded-xl border text-xs font-medium transition-all duration-150 hover:-translate-y-0.5 active:scale-95 cursor-pointer ${
                   currentTheme === "dark"
-                    ? "border-sky-500 bg-sky-50/60 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300 shadow-sm"
-                    : "border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-300"
+                    ? "border-sky-500 bg-sky-50/60 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300 shadow-sm ring-1 ring-sky-500/40"
+                    : "border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-300 shadow-2xs hover:shadow-sm"
                 }`}
               >
-                <Moon className="w-5 h-5 text-sky-400" />
+                <Moon className="w-5 h-5 text-sky-400 transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-12" />
                 <span>Dark</span>
               </button>
             </div>
@@ -451,7 +451,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   type="button"
                   onClick={handleTestConnection}
                   disabled={isTesting || !apiUrl.trim()}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium text-slate-700 dark:text-slate-200 transition-colors disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium text-slate-700 dark:text-slate-200 transition-all duration-150 active:scale-95 disabled:opacity-50"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isTesting ? "animate-spin text-sky-500" : ""}`} />
                   <span>Test</span>
@@ -494,16 +494,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-150 active:scale-95"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-md shadow-sky-600/20 active:scale-95 transition-all"
+            className="group flex items-center gap-1.5 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-md shadow-sky-600/20 active:scale-95 transition-all duration-150"
           >
-            <Save className="w-3.5 h-3.5" />
+            <Save className="w-3.5 h-3.5 transition-transform duration-150 group-hover:scale-110" />
             <span>Save Changes</span>
           </button>
         </div>

@@ -125,7 +125,7 @@ export const RephraseModal: React.FC<RephraseModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-xl rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl p-6 text-slate-800 dark:text-slate-100 animate-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col"
+        className="relative w-full max-w-xl rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl p-6 text-slate-800 dark:text-slate-100 animate-modal-in max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -154,7 +154,7 @@ export const RephraseModal: React.FC<RephraseModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-150 active:scale-90"
           >
             <X className="w-4 h-4" />
           </button>
@@ -298,7 +298,7 @@ export const RephraseModal: React.FC<RephraseModalProps> = ({
                 return (
                   <div
                     key={idx}
-                    className="group relative p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-400/80 dark:hover:border-amber-500/60 bg-white dark:bg-slate-850 hover:shadow-md transition-all space-y-2.5"
+                    className="group relative p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-400/80 dark:hover:border-amber-500/60 bg-white dark:bg-slate-850 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 space-y-2.5 animate-card-in"
                   >
                     {/* Header info */}
                     <div className="flex items-center justify-between">
@@ -333,7 +333,7 @@ export const RephraseModal: React.FC<RephraseModalProps> = ({
                         <button
                           onClick={() => handleCopy(item.text)}
                           title="Copy rephrased sentence"
-                          className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700/80 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs transition-colors active:scale-95"
+                          className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700/80 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs transition-all duration-150 active:scale-90"
                         >
                           <Copy className="w-3.5 h-3.5" />
                         </button>
@@ -344,10 +344,10 @@ export const RephraseModal: React.FC<RephraseModalProps> = ({
                             toast.success("Sentence applied");
                             onClose();
                           }}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium shadow-sm transition-all active:scale-95"
+                          className="group/apply flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium shadow-sm hover:shadow transition-all duration-150 active:scale-95"
                         >
                           <span>Apply</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
+                          <ArrowRight className="w-3.5 h-3.5 transition-transform duration-150 group-hover/apply:translate-x-0.5 rtl:group-hover/apply:-translate-x-0.5" />
                         </button>
                       </div>
                     </div>
@@ -374,9 +374,9 @@ export const RephraseModal: React.FC<RephraseModalProps> = ({
             <button
               onClick={() => fetchSuggestions(sentenceInfo.text)}
               disabled={isLoading}
-              className="flex items-center gap-1.5 hover:text-slate-800 dark:hover:text-slate-200 transition-colors disabled:opacity-50"
+              className="group flex items-center gap-1.5 hover:text-slate-800 dark:hover:text-slate-200 transition-all duration-150 active:scale-95 disabled:opacity-50"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`w-3.5 h-3.5 transition-transform duration-300 group-hover:rotate-45 ${isLoading ? "animate-spin text-amber-500" : ""}`} />
               <span>Regenerate variations</span>
             </button>
             <span className="text-[11px] text-slate-400">Esc to close</span>

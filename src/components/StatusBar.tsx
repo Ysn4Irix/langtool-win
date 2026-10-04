@@ -101,7 +101,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             <button
               onClick={onRephrase}
               title="Click to rephrase active sentence (Ctrl+Shift+R)"
-              className="hover:text-amber-500 dark:hover:text-amber-400 transition-colors cursor-pointer"
+              className="hover:text-amber-500 dark:hover:text-amber-400 transition-all duration-150 cursor-pointer active:scale-95"
             >
               Ctrl+Shift+R rephrase
             </button>
@@ -115,9 +115,9 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         <button
           onClick={onOpenSettings}
           title={`Connected to ${apiUrl} (Click to change)`}
-          className="flex items-center gap-1.5 px-2 py-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          className="group flex items-center gap-1.5 px-2 py-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-all duration-150 cursor-pointer active:scale-95"
         >
-          <span className={`w-2 h-2 rounded-full ${apiConnected ? "bg-emerald-500" : "bg-rose-500"}`} />
+          <span className={`w-2 h-2 rounded-full transition-transform duration-150 group-hover:scale-125 ${apiConnected ? "bg-emerald-500" : "bg-rose-500"}`} />
           <span className="text-[10px] text-slate-600 dark:text-slate-400 font-mono underline decoration-dotted underline-offset-2">
             {displayHost}
           </span>

@@ -101,7 +101,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             <button
               onClick={() => removeToast(t.id)}
               title="Dismiss"
-              className="p-0.5 rounded hover:bg-slate-200/60 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors ml-1 cursor-pointer"
+              className="p-0.5 rounded hover:bg-slate-200/60 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all duration-150 active:scale-90 ml-1 cursor-pointer"
             >
               <X className="w-3 h-3" />
             </button>

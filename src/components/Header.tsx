@@ -88,18 +88,18 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 backdrop-blur px-4 flex items-center justify-between select-none z-30 transition-colors">
       {/* Brand / Logo */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 group cursor-default">
         <img
           src="/icon.png"
           alt="langtool icon"
-          className="w-8 h-8 rounded-lg object-cover border border-slate-200 dark:border-slate-800"
+          className="w-8 h-8 rounded-lg object-cover border border-slate-200 dark:border-slate-800 shadow-sm transition-transform duration-200 group-hover:scale-105"
         />
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100 tracking-tight lowercase">
               langtool
             </h1>
-            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-400 border border-sky-300/60 dark:border-sky-800/60">
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-400 border border-sky-300/60 dark:border-sky-800/60 transition-colors">
               Desktop
             </span>
           </div>
@@ -113,19 +113,19 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200/80 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700/80 text-xs font-medium text-slate-700 dark:text-slate-200 transition-colors shadow-inner"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200/80 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700/80 text-xs font-medium text-slate-700 dark:text-slate-200 transition-all duration-150 active:scale-95 shadow-inner"
         >
           <Globe className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
           <span className="max-w-[150px] truncate">{currentLangLabel}</span>
           <ChevronDown
-            className={`w-3.5 h-3.5 text-slate-400 transition-transform ${
+            className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
               langDropdownOpen ? "rotate-180" : ""
             }`}
           />
         </button>
 
         {langDropdownOpen && (
-          <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 w-64 max-h-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50 flex flex-col animate-in fade-in zoom-in-95 duration-100">
+          <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 w-64 max-h-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50 flex flex-col animate-in fade-in zoom-in-95 slide-in-from-top-1.5 duration-150">
             <div className="p-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 flex items-center gap-2">
               <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               <input
@@ -136,6 +136,14 @@ export const Header: React.FC<HeaderProps> = ({
                 autoFocus
                 className="w-full bg-transparent text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none"
               />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="p-0.5 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              )}
             </div>
 
             <div className="overflow-y-auto max-h-60 py-1">
@@ -145,7 +153,7 @@ export const Header: React.FC<HeaderProps> = ({
                   onSelectLanguage("auto");
                   setLangDropdownOpen(false);
                 }}
-                className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors ${
+                className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all duration-100 active:scale-[0.99] ${
                   selectedLanguage === "auto"
                     ? "text-sky-600 dark:text-sky-400 font-semibold bg-sky-50 dark:bg-sky-500/10"
                     : "text-slate-700 dark:text-slate-300"
@@ -173,7 +181,7 @@ export const Header: React.FC<HeaderProps> = ({
                       onSelectLanguage(lang.code);
                       setLangDropdownOpen(false);
                     }}
-                    className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors ${
+                    className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all duration-100 active:scale-[0.99] ${
                       isSelected
                         ? "text-sky-600 dark:text-sky-400 font-semibold bg-sky-50 dark:bg-sky-500/10"
                         : "text-slate-700 dark:text-slate-300"
@@ -202,10 +210,10 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={onManualCheck}
           disabled={isChecking}
           title="Check text now (Ctrl+Enter)"
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700/70 transition-colors disabled:opacity-50"
+          className="group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700/70 transition-all duration-150 active:scale-95 disabled:opacity-50"
         >
           <RefreshCw
-            className={`w-3.5 h-3.5 text-slate-500 dark:text-slate-400 ${
+            className={`w-3.5 h-3.5 text-slate-500 dark:text-slate-400 transition-transform duration-200 group-hover:rotate-45 ${
               isChecking ? "animate-spin text-sky-500 dark:text-sky-400" : ""
             }`}
           />
@@ -218,9 +226,9 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={onRephrase}
             disabled={!hasText}
             title="Rephrase active sentence with Groq Cloud (Ctrl+Shift+R)"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 text-xs font-medium text-amber-700 dark:text-amber-300 border border-amber-300/80 dark:border-amber-600/50 transition-colors disabled:opacity-40 shadow-sm"
+            className="group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 text-xs font-medium text-amber-700 dark:text-amber-300 border border-amber-300/80 dark:border-amber-600/50 hover:border-amber-400 dark:hover:border-amber-500 transition-all duration-150 active:scale-95 disabled:opacity-40 shadow-sm hover:shadow"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <Sparkles className="w-3.5 h-3.5 text-amber-500 transition-transform duration-200 group-hover:rotate-12 group-hover:scale-110" />
             <span className="hidden sm:inline">Rephrase</span>
           </button>
         )}
@@ -229,9 +237,9 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={onCopyText}
           title="Copy text (Ctrl+Shift+C)"
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700/70 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-medium transition-colors active:scale-95"
+          className="group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700/70 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-medium transition-all duration-150 active:scale-95"
         >
-          <Copy className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+          <Copy className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 transition-transform duration-200 group-hover:scale-110" />
           <span className="hidden sm:inline">Copy</span>
         </button>
 
@@ -239,9 +247,9 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={onClearText}
           title="Clear all text"
-          className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+          className="group p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-all duration-150 active:scale-95"
         >
-          <Trash2 className="w-4 h-4" />
+          <Trash2 className="w-4 h-4 transition-transform duration-200 group-hover:scale-110" />
         </button>
 
         <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-0.5" />
@@ -250,12 +258,12 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={onToggleTheme}
           title={`Switch to ${resolvedTheme === "dark" ? "Light" : "Dark"} mode`}
-          className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-300 transition-colors"
+          className="group p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-300 transition-all duration-150 active:scale-90"
         >
           {resolvedTheme === "dark" ? (
-            <Sun className="w-4 h-4 text-amber-400" />
+            <Sun className="w-4 h-4 text-amber-400 transition-transform duration-300 group-hover:rotate-90" />
           ) : (
-            <Moon className="w-4 h-4 text-slate-700" />
+            <Moon className="w-4 h-4 text-slate-700 transition-transform duration-300 group-hover:-rotate-12" />
           )}
         </button>
 
@@ -263,9 +271,9 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={onOpenSettings}
           title="Settings (API URL, Theme)"
-          className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
+          className="group p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-all duration-150 active:scale-90"
         >
-          <Settings className="w-4 h-4" />
+          <Settings className="w-4 h-4 transition-transform duration-300 group-hover:rotate-45" />
         </button>
 
         <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-0.5" />
@@ -274,20 +282,21 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={onToggleSidebar}
           title="Toggle Review Panel"
-          className={`relative p-1.5 rounded-lg border transition-colors ${
+          className={`group relative p-1.5 rounded-lg border transition-all duration-150 active:scale-95 ${
             showSidebar
-              ? "bg-sky-50 dark:bg-sky-500/15 border-sky-300 dark:border-sky-500/50 text-sky-700 dark:text-sky-300"
+              ? "bg-sky-50 dark:bg-sky-500/15 border-sky-300 dark:border-sky-500/50 text-sky-700 dark:text-sky-300 shadow-sm"
               : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 border-slate-200 dark:border-slate-700/70 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
           }`}
         >
-          <SlidersHorizontal className="w-4 h-4" />
+          <SlidersHorizontal className="w-4 h-4 transition-transform duration-200 group-hover:scale-105" />
           {issueCounts.total > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center shadow">
+            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center shadow transition-transform duration-200 group-hover:scale-110">
               {issueCounts.total > 9 ? "9+" : issueCounts.total}
             </span>
           )}
         </button>
       </div>
     </header>
+
   );
 };
