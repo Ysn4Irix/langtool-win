@@ -4,16 +4,18 @@ export interface DesktopWindowState {
   isMiniMode: boolean;
 }
 
+export interface DesktopBridgeApi {
+  get_window_state: () => Promise<DesktopWindowState>;
+  toggle_mini_mode: () => Promise<DesktopWindowState>;
+  set_mini_mode: (enable: boolean) => Promise<DesktopWindowState>;
+  toggle_always_on_top: () => Promise<DesktopWindowState>;
+  set_always_on_top: (enable: boolean) => Promise<DesktopWindowState>;
+}
+
 declare global {
   interface Window {
     pywebview?: {
-      api?: {
-        get_window_state: () => Promise<DesktopWindowState>;
-        toggle_mini_mode: () => Promise<DesktopWindowState>;
-        set_mini_mode: (enable: boolean) => Promise<DesktopWindowState>;
-        toggle_always_on_top: () => Promise<DesktopWindowState>;
-        set_always_on_top: (enable: boolean) => Promise<DesktopWindowState>;
-      };
+      api?: DesktopBridgeApi;
     };
     __onDesktopWindowStateChanged?: (state: DesktopWindowState) => void;
   }
@@ -36,14 +38,47 @@ if (typeof window !== "undefined") {
   };
 }
 
+async function getApi(): Promise<DesktopBridgeApi | null> {
+  if (typeof window === "undefined") return null;
+  if (window.pywebview?.api) return window.pywebview.api;
+
+  return new Promise<DesktopBridgeApi | null>((resolve) => {
+    let done = false;
+    const cleanup = () => {
+      done = true;
+      window.removeEventListener("pywebviewready", handleReady);
+      clearInterval(interval);
+      clearTimeout(timer);
+    };
+    const handleReady = () => {
+      if (!done) {
+        cleanup();
+        resolve(window.pywebview?.api || null);
+      }
+    };
+    window.addEventListener("pywebviewready", handleReady, { once: true });
+    const interval = setInterval(() => {
+      if (window.pywebview?.api) {
+        cleanup();
+        resolve(window.pywebview.api);
+      }
+    }, 30);
+    const timer = setTimeout(() => {
+      cleanup();
+      resolve(window.pywebview?.api || null);
+    }, 1500);
+  });
+}
+
 export function isDesktopApp(): boolean {
   return typeof window !== "undefined" && !!window.pywebview?.api;
 }
 
 export async function getDesktopWindowState(): Promise<DesktopWindowState> {
-  if (isDesktopApp() && window.pywebview?.api?.get_window_state) {
+  const api = await getApi();
+  if (api?.get_window_state) {
     try {
-      const state = await window.pywebview.api.get_window_state();
+      const state = await api.get_window_state();
       simulatedState = state;
       return state;
     } catch (e) {
@@ -54,9 +89,10 @@ export async function getDesktopWindowState(): Promise<DesktopWindowState> {
 }
 
 export async function toggleMiniMode(): Promise<DesktopWindowState> {
-  if (isDesktopApp() && window.pywebview?.api?.toggle_mini_mode) {
+  const api = await getApi();
+  if (api?.toggle_mini_mode) {
     try {
-      const state = await window.pywebview.api.toggle_mini_mode();
+      const state = await api.toggle_mini_mode();
       simulatedState = state;
       listeners.forEach((cb) => cb(state));
       return state;
@@ -78,9 +114,10 @@ export async function toggleMiniMode(): Promise<DesktopWindowState> {
 }
 
 export async function setMiniMode(enable: boolean): Promise<DesktopWindowState> {
-  if (isDesktopApp() && window.pywebview?.api?.set_mini_mode) {
+  const api = await getApi();
+  if (api?.set_mini_mode) {
     try {
-      const state = await window.pywebview.api.set_mini_mode(enable);
+      const state = await api.set_mini_mode(enable);
       simulatedState = state;
       listeners.forEach((cb) => cb(state));
       return state;
@@ -100,9 +137,10 @@ export async function setMiniMode(enable: boolean): Promise<DesktopWindowState> 
 }
 
 export async function togglePin(): Promise<DesktopWindowState> {
-  if (isDesktopApp() && window.pywebview?.api?.toggle_always_on_top) {
+  const api = await getApi();
+  if (api?.toggle_always_on_top) {
     try {
-      const state = await window.pywebview.api.toggle_always_on_top();
+      const state = await api.toggle_always_on_top();
       simulatedState = state;
       listeners.forEach((cb) => cb(state));
       return state;

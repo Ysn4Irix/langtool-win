@@ -48,7 +48,7 @@ def is_position_visible(x, y, min_visible_w=100, min_visible_h=50):
         return 0 <= x < 20000 and 0 <= y < 20000
 
 def get_window_hwnd():
-    """Retrieve the native Win32 window HWND handle."""
+    """Retrieve the native Win32 window HWND handle safely in 64-bit environment."""
     global main_window
     if not main_window:
         return None
@@ -56,37 +56,44 @@ def get_window_hwnd():
         import webview.platforms.winforms as wf
         inst = wf.BrowserView.instances.get(main_window.uid)
         if inst and hasattr(inst, "Handle"):
-            return inst.Handle.ToInt32()
+            handle_val = inst.Handle
+            if hasattr(handle_val, "ToInt64"):
+                return handle_val.ToInt64()
+            elif hasattr(handle_val, "ToInt32"):
+                return handle_val.ToInt32()
+            return int(handle_val)
     except Exception:
         pass
     try:
         user32 = ctypes.windll.user32
-        hwnd = user32.FindWindowW(None, "langtool - Desktop Assistant")
-        if hwnd:
-            return hwnd
+        for title in ["langtool - Desktop Assistant", "langtool"]:
+            hwnd = user32.FindWindowW(None, title)
+            if hwnd:
+                return hwnd
     except Exception:
         pass
     return None
 
-def set_window_topmost(hwnd, on_top: bool):
-    """Pin or unpin the window on top using Win32 SetWindowPos."""
-    if not hwnd:
+def set_window_topmost(on_top: bool, hwnd=None):
+    """Pin or unpin the window on top using native pywebview and WinForms Form.TopMost."""
+    global main_window
+    if not main_window:
         return
+
+    # 1. Native pywebview on_top property (directly updates WinForms Form.TopMost)
     try:
-        user32 = ctypes.windll.user32
-        HWND_TOPMOST = -1
-        HWND_NOTOPMOST = -2
-        SWP_NOMOVE = 0x0002
-        SWP_NOSIZE = 0x0001
-        SWP_SHOWWINDOW = 0x0040
-        user32.SetWindowPos(
-            hwnd,
-            HWND_TOPMOST if on_top else HWND_NOTOPMOST,
-            0, 0, 0, 0,
-            SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW
-        )
+        main_window.on_top = bool(on_top)
     except Exception as e:
-        print("SetWindowPos topmost error:", e)
+        print("pywebview main_window.on_top warning:", e)
+
+    # 2. Directly sync WinForms Form instance TopMost
+    try:
+        import webview.platforms.winforms as wf
+        inst = wf.BrowserView.instances.get(main_window.uid)
+        if inst:
+            inst.TopMost = bool(on_top)
+    except Exception:
+        pass
 
 class DesktopBridge:
     def __init__(self):
@@ -154,18 +161,14 @@ class DesktopBridge:
 
     def toggle_always_on_top(self):
         self.state["is_pinned"] = not self.state["is_pinned"]
-        hwnd = get_window_hwnd()
-        if hwnd:
-            set_window_topmost(hwnd, self.state["is_pinned"])
+        set_window_topmost(self.state["is_pinned"])
         save_window_state()
         self.notify_frontend()
         return self.get_window_state()
 
     def set_always_on_top(self, enable: bool):
         self.state["is_pinned"] = bool(enable)
-        hwnd = get_window_hwnd()
-        if hwnd:
-            set_window_topmost(hwnd, self.state["is_pinned"])
+        set_window_topmost(self.state["is_pinned"])
         save_window_state()
         self.notify_frontend()
         return self.get_window_state()
@@ -222,8 +225,8 @@ class DesktopBridge:
 
             main_window.resize(mw, mh)
             main_window.move(mx, my)
+            set_window_topmost(True, hwnd=hwnd)
             if hwnd:
-                set_window_topmost(hwnd, True)
                 force_activate_window(hwnd)
 
         elif not enable and self.state["mode"] != "studio":
@@ -254,8 +257,8 @@ class DesktopBridge:
                 screen_h = user32.GetSystemMetrics(1)
                 main_window.move(max(80, (screen_w - sw) // 2), max(60, (screen_h - sh) // 2))
 
+            set_window_topmost(False, hwnd=hwnd)
             if hwnd:
-                set_window_topmost(hwnd, False)
                 if self.state["studio"].get("maximized"):
                     time.sleep(0.05)
                     main_window.maximize()
@@ -440,7 +443,7 @@ def show_window():
         # Step 3: Windows foreground activation & topmost state
         if hwnd:
             if desktop_bridge.state["is_pinned"]:
-                set_window_topmost(hwnd, True)
+                set_window_topmost(True, hwnd=hwnd)
             force_activate_window(hwnd)
 
     except Exception as e:
@@ -559,6 +562,8 @@ def main():
 
     mode = desktop_bridge.state["mode"]
     geom = desktop_bridge.state["mini"] if mode == "mini" else desktop_bridge.state["studio"]
+    is_pinned = bool(desktop_bridge.state.get("is_pinned", False) or mode == "mini")
+    desktop_bridge.state["is_pinned"] = is_pinned
 
     window_kwargs = {
         "title": "langtool - Desktop Assistant",
@@ -569,6 +574,7 @@ def main():
         "background_color": initial_bg,
         "text_select": True,
         "resizable": True,
+        "on_top": is_pinned,
         "js_api": desktop_bridge,
     }
 
@@ -587,7 +593,7 @@ def main():
         hwnd = get_window_hwnd()
         if hwnd:
             if desktop_bridge.state["is_pinned"]:
-                set_window_topmost(hwnd, True)
+                set_window_topmost(True, hwnd=hwnd)
             if mode == "studio" and desktop_bridge.state["studio"].get("maximized"):
                 try:
                     time.sleep(0.1)
