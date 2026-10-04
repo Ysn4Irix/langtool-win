@@ -19,6 +19,7 @@ import {
   isGroqConfigured,
   setGroqConfig,
 } from "../services/rephraseService";
+import { useToast } from "../context/ToastContext";
 
 interface RephraseModalProps {
   isOpen: boolean;
@@ -39,6 +40,7 @@ export const RephraseModal: React.FC<RephraseModalProps> = ({
   onApply,
   onOpenSettings,
 }) => {
+  const toast = useToast();
   const [suggestions, setSuggestions] = useState<RephraseSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,6 +90,7 @@ export const RephraseModal: React.FC<RephraseModalProps> = ({
     if (!quickApiKey.trim()) return;
     setGroqConfig({ apiKey: quickApiKey.trim() });
     setHasKey(true);
+    toast.success("Groq API key saved");
     if (sentenceInfo) {
       fetchSuggestions(sentenceInfo.text);
     }
@@ -96,8 +99,10 @@ export const RephraseModal: React.FC<RephraseModalProps> = ({
   const handleCopy = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
+      toast.success("Sentence copied to clipboard");
     } catch (err) {
       console.error("Copy failed:", err);
+      toast.error("Failed to copy sentence");
     }
   };
 
@@ -336,6 +341,7 @@ export const RephraseModal: React.FC<RephraseModalProps> = ({
                         <button
                           onClick={() => {
                             onApply(item.text);
+                            toast.success("Sentence applied");
                             onClose();
                           }}
                           className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium shadow-sm transition-all active:scale-95"

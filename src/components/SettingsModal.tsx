@@ -18,6 +18,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { ThemePreference } from "../utils/useTheme";
+import { useToast } from "../context/ToastContext";
 import {
   DEFAULT_API_URL,
   getStoredApiUrl,
@@ -49,6 +50,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onSelectTheme,
   onApiUrlChanged,
 }) => {
+  const toast = useToast();
+
   // LanguageTool API State
   const [apiUrl, setApiUrl] = useState<string>("");
   const [isTesting, setIsTesting] = useState<boolean>(false);
@@ -163,6 +166,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       model: groqModel,
     });
 
+    toast.success("Settings saved successfully");
     onClose();
   };
 
@@ -170,6 +174,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     const defaultUrl = resetStoredApiUrl();
     setApiUrl(defaultUrl);
     setTestResult(null);
+    toast.info("Server reset to default");
   };
 
   return (

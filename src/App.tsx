@@ -9,11 +9,13 @@ import { getLanguages, checkText, getStoredApiUrl } from "./services/langtoolApi
 import { applyReplacement, applyAllReplacements, getStats } from "./utils/textUtils";
 import { useTheme } from "./utils/useTheme";
 import { computeIsRtl } from "./utils/rtlUtils";
+import { useToast } from "./context/ToastContext";
 
 const STORAGE_TEXT_KEY = "langtool_user_text";
 
 export default function App() {
   const { theme, resolvedTheme, setTheme, toggleTheme } = useTheme();
+  const toast = useToast();
 
   const [text, setText] = useState<string>(() => {
     if (typeof window === "undefined") return "";
@@ -193,20 +195,27 @@ export default function App() {
   };
 
   const handleClearText = () => {
+    if (!text) return;
     setText("");
     setMatches([]);
     setSelectedMatch(null);
     try {
       localStorage.removeItem(STORAGE_TEXT_KEY);
     } catch {}
+    toast.info("Editor cleared");
   };
 
   const handleCopyText = async () => {
-    if (!text) return;
+    if (!text.trim()) {
+      toast.info("No text to copy");
+      return;
+    }
     try {
       await navigator.clipboard.writeText(text);
+      toast.success("Text copied to clipboard");
     } catch (err) {
       console.error("Clipboard copy error:", err);
+      toast.error("Failed to copy to clipboard");
     }
   };
 
