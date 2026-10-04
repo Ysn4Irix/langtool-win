@@ -38,21 +38,9 @@
 
 ## 📸 Overview
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│ [🪶 langtool]  [English (US) ▾]  [Auto-Detect]   [☀️] [📌] [🗕] [⚙️] [✕] │
-├───────────────────────────────────────────────────────┬────────────────┤
-│                                                       │ 🪄 Review (3)  │
-│  The quick brown fox jumps over the lazzy dog.        ├────────────────┤
-│                                     ~~~~~~            │ • Spelling (1) │
-│                                                       │   "lazzy"      │
-│                                                       │ • Grammar (1)  │
-│                                                       │ • Style (1)    │
-│                                                       │ [ Fix All (3) ]│
-├───────────────────────────────────────────────────────┴────────────────┤
-│ 🟢 API Connected (langtool.ysnirix.xyz)    9 words • 43 chars • 0.1 min │
-└────────────────────────────────────────────────────────────────────────┘
-```
+<p align="center">
+  <img src="docs/screenshots/overview.png" alt="langtool Windows Desktop Assistant Overview" width="100%" />
+</p>
 
 ---
 
@@ -165,12 +153,10 @@ flowchart TD
 
 ## ⚙️ Configuration & Custom Servers
 
-langtool is pre-configured to use the hosted LanguageTool endpoint `https://langtool.ysnirix.xyz/v2/`.
-
-You can also point it to any self-hosted or local instance (e.g. Docker):
+langtool connects seamlessly to any remote or self-hosted LanguageTool API instance:
 
 1. Press `Ctrl + ,` or click the **Settings** gear icon in the top header.
-2. Enter your custom API endpoint (e.g., `http://localhost:8010/v2`).
+2. Enter your custom API endpoint (e.g., `http://localhost:8010/v2` or your private server).
 3. Click **Test Connection** to verify health and language support.
 4. Click **Save Changes**.
 
