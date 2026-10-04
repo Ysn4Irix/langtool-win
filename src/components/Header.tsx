@@ -282,16 +282,16 @@ export const Header: React.FC<HeaderProps> = ({
 
   // Full Studio Mode Header
   return (
-    <header className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 backdrop-blur px-4 flex items-center justify-between select-none z-30 transition-colors">
+    <header className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 backdrop-blur px-3 sm:px-4 flex items-center justify-between gap-2 sm:gap-4 select-none z-30 transition-colors">
       {/* Brand / Logo */}
-      <div className="flex items-center gap-3 group cursor-default">
+      <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 group cursor-default">
         <img
           src="/icon.png"
           alt="langtool icon"
-          className="w-8 h-8 rounded-lg object-cover border border-slate-200 dark:border-slate-800 shadow-sm transition-transform duration-200 group-hover:scale-105"
+          className="w-8 h-8 rounded-lg object-cover border border-slate-200 dark:border-slate-800 shadow-sm transition-transform duration-200 group-hover:scale-105 shrink-0"
         />
-        <div>
-          <div className="flex items-center gap-2">
+        <div className="shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100 tracking-tight lowercase">
               langtool
             </h1>
@@ -299,22 +299,22 @@ export const Header: React.FC<HeaderProps> = ({
               Desktop
             </span>
           </div>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 -mt-0.5">
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 -mt-0.5 whitespace-nowrap hidden lg:block">
             Spelling & Grammar Assistant
           </p>
         </div>
       </div>
 
       {/* Center Controls: Language Selector */}
-      <div className="relative" ref={dropdownRef}>
+      <div className="relative shrink-0" ref={dropdownRef}>
         <button
           onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200/80 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700/80 text-xs font-medium text-slate-700 dark:text-slate-200 transition-all duration-150 active:scale-95 shadow-inner"
+          className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200/80 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700/80 text-xs font-medium text-slate-700 dark:text-slate-200 transition-all duration-150 active:scale-95 shadow-inner"
         >
-          <Globe className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
-          <span className="max-w-[150px] truncate">{currentLangLabel}</span>
+          <Globe className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400 shrink-0" />
+          <span className="max-w-[120px] sm:max-w-[150px] truncate">{currentLangLabel}</span>
           <ChevronDown
-            className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+            className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${
               langDropdownOpen ? "rotate-180" : ""
             }`}
           />
@@ -324,20 +324,20 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Right Action Buttons */}
-      <div className="flex items-center gap-1.5 sm:gap-2">
+      <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
         {/* Manual Recheck button */}
         <button
           onClick={onManualCheck}
           disabled={isChecking}
           title="Check text now (Ctrl+Enter)"
-          className="group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700/70 transition-all duration-150 active:scale-95 disabled:opacity-50"
+          className="group flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700/70 transition-all duration-150 active:scale-95 disabled:opacity-50"
         >
           <RefreshCw
             className={`w-3.5 h-3.5 text-slate-500 dark:text-slate-400 transition-transform duration-200 group-hover:rotate-45 ${
               isChecking ? "animate-spin text-sky-500 dark:text-sky-400" : ""
             }`}
           />
-          <span className="hidden sm:inline">Check</span>
+          <span className="hidden lg:inline">Check</span>
         </button>
 
         {/* AI Rephrase button */}
@@ -346,7 +346,7 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={onRephrase}
             disabled={!hasText}
             title="Rephrase active sentence with Groq Cloud (Ctrl+Shift+R)"
-            className="group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 text-xs font-medium text-amber-700 dark:text-amber-300 border border-amber-300/80 dark:border-amber-600/50 hover:border-amber-400 dark:hover:border-amber-500 transition-all duration-150 active:scale-95 disabled:opacity-40 shadow-sm hover:shadow"
+            className="group flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 text-xs font-medium text-amber-700 dark:text-amber-300 border border-amber-300/80 dark:border-amber-600/50 hover:border-amber-400 dark:hover:border-amber-500 transition-all duration-150 active:scale-95 disabled:opacity-40 shadow-sm hover:shadow"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-500 transition-transform duration-200 group-hover:rotate-12 group-hover:scale-110" />
             <span className="hidden sm:inline">Rephrase</span>
@@ -357,10 +357,10 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={onCopyText}
           title="Copy text (Ctrl+Shift+C)"
-          className="group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700/70 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-medium transition-all duration-150 active:scale-95"
+          className="group flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700/70 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-medium transition-all duration-150 active:scale-95"
         >
           <Copy className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 transition-transform duration-200 group-hover:scale-110" />
-          <span className="hidden sm:inline">Copy</span>
+          <span className="hidden xl:inline">Copy</span>
         </button>
 
         {/* Clear button */}
@@ -372,7 +372,7 @@ export const Header: React.FC<HeaderProps> = ({
           <Trash2 className="w-4 h-4 transition-transform duration-200 group-hover:scale-110" />
         </button>
 
-        <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-0.5" />
+        <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-0.5 shrink-0" />
 
         {/* Quick Theme Toggle (Sun / Moon) */}
         <button
@@ -396,7 +396,7 @@ export const Header: React.FC<HeaderProps> = ({
           <Settings className="w-4 h-4 transition-transform duration-300 group-hover:rotate-45" />
         </button>
 
-        <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-0.5" />
+        <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-0.5 shrink-0" />
 
         {/* Always on Top (Pin) Button */}
         {onTogglePin && (
@@ -424,7 +424,7 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         )}
 
-        <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-0.5" />
+        <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-0.5 shrink-0" />
 
         {/* Toggle Sidebar Button */}
         <button
