@@ -87,9 +87,11 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 backdrop-blur px-4 flex items-center justify-between select-none z-30 transition-colors">
       {/* Brand / Logo */}
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-sky-500 flex items-center justify-center shadow-md shadow-indigo-500/20 text-white font-bold text-sm tracking-tighter">
-          lt
-        </div>
+        <img
+          src="/icon.png"
+          alt="langtool icon"
+          className="w-8 h-8 rounded-lg shadow-md object-cover border border-slate-200 dark:border-slate-800"
+        />
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100 tracking-tight lowercase">
