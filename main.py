@@ -584,11 +584,17 @@ def setup_global_hotkey():
 def main():
     global main_window, desktop_bridge
 
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    if getattr(sys, 'frozen', False):
+        base_dir = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+    else:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+
     dist_dir = os.path.join(base_dir, "dist")
     icon_path = os.path.join(base_dir, "src-tauri", "icons", "32x32.png")
+    if not os.path.exists(icon_path):
+        icon_path = os.path.join(base_dir, "icons", "32x32.png")
 
-    if not os.path.exists(os.path.join(dist_dir, "index.html")):
+    if not getattr(sys, 'frozen', False) and not os.path.exists(os.path.join(dist_dir, "index.html")):
         print("Dist folder not found. Running build...")
         os.system("npm run build")
 

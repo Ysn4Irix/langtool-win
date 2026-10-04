@@ -9,6 +9,8 @@
     "preview": "vite preview",
     "start": "python main.py",
     "start:silent": "pythonw main.py",
+    "release": "python scripts/build_release.py",
+    "build:portable": "python scripts/build_release.py",
     "tauri": "tauri"
   },
   "dependencies": {
