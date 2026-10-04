@@ -177,15 +177,15 @@ def setup_system_tray(icon_path):
             image = Image.new('RGB', (32, 32), color=(14, 165, 233))
 
         menu = pystray.Menu(
-            pystray.MenuItem("Open LanguageTool", lambda icon, item: show_window(), default=True),
+            pystray.MenuItem("Open langtool", lambda icon, item: show_window(), default=True),
             pystray.MenuItem("Hide to Tray", lambda icon, item: hide_window()),
             pystray.Menu.SEPARATOR,
-            pystray.MenuItem("API: langtool.ysnirix.xyz", lambda icon, item: None, enabled=False),
+            pystray.MenuItem("langtool API: langtool.ysnirix.xyz", lambda icon, item: None, enabled=False),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem("Exit", lambda icon, item: quit_app())
         )
 
-        tray_icon = pystray.Icon("LanguageTool", image, "LanguageTool Desktop", menu)
+        tray_icon = pystray.Icon("langtool", image, "langtool Desktop", menu)
         tray_thread = threading.Thread(target=tray_icon.run, daemon=True)
         tray_thread.start()
     except Exception as e:
@@ -219,7 +219,7 @@ def main():
     setup_global_hotkey()
 
     window_kwargs = {
-        "title": "LanguageTool - Desktop Assistant",
+        "title": "langtool - Desktop Assistant",
         "url": app_url,
         "width": saved_state["width"],
         "height": saved_state["height"],

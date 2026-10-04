@@ -88,12 +88,12 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Brand / Logo */}
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-sky-500 flex items-center justify-center shadow-md shadow-indigo-500/20 text-white font-bold text-sm tracking-tighter">
-          LT
+          lt
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-sm font-semibold text-slate-800 dark:text-slate-100 tracking-tight">
-              LanguageTool
+            <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100 tracking-tight lowercase">
+              langtool
             </h1>
             <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-400 border border-sky-300/60 dark:border-sky-800/60">
               Desktop
