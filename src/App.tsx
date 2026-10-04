@@ -9,12 +9,15 @@ import { getLanguages, checkText, getStoredApiUrl } from "./services/langtoolApi
 import { applyReplacement, applyAllReplacements, getStats } from "./utils/textUtils";
 import { useTheme } from "./utils/useTheme";
 
-const INITIAL_SAMPLE_TEXT = `This are a test for spelling and grammer mistaks. She have a apple every morning because it keep the doctor away. LanguageTool help you find mistakes that simple spell check cannot detects.`;
+const STORAGE_TEXT_KEY = "langtool_user_text";
 
 export default function App() {
   const { theme, resolvedTheme, setTheme, toggleTheme } = useTheme();
 
-  const [text, setText] = useState<string>(INITIAL_SAMPLE_TEXT);
+  const [text, setText] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return localStorage.getItem(STORAGE_TEXT_KEY) ?? "";
+  });
   const [language, setLanguage] = useState<string>("auto");
   const [languages, setLanguages] = useState<Language[]>([]);
   const [detectedLanguage, setDetectedLanguage] = useState<DetectedLanguage | undefined>();
@@ -91,8 +94,23 @@ export default function App() {
     [apiUrl, ignoredIds]
   );
 
+  // Automatically persist user input to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_TEXT_KEY, text);
+    } catch (err) {
+      console.warn("Failed to persist user text:", err);
+    }
+  }, [text]);
+
   // Debounced check on text or language change (500ms debounce)
   useEffect(() => {
+    if (!text.trim()) {
+      setMatches([]);
+      setIsChecking(false);
+      return;
+    }
+
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
@@ -157,6 +175,9 @@ export default function App() {
     setText("");
     setMatches([]);
     setSelectedMatch(null);
+    try {
+      localStorage.removeItem(STORAGE_TEXT_KEY);
+    } catch {}
   };
 
   const handleCopyText = async () => {
