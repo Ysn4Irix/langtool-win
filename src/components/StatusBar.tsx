@@ -13,7 +13,6 @@ interface StatusBarProps {
   apiUrl: string;
   onOpenSettings: () => void;
   onRephrase?: () => void;
-  isRtl?: boolean;
 }
 
 export const StatusBar: React.FC<StatusBarProps> = ({
@@ -28,7 +27,6 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   apiUrl,
   onOpenSettings,
   onRephrase,
-  isRtl = false,
 }) => {
   // Extract hostname for clean pill display
   let displayHost = "API Server";
@@ -67,15 +65,6 @@ export const StatusBar: React.FC<StatusBarProps> = ({
           <div className="hidden md:flex items-center gap-1 text-sky-600 dark:text-sky-400/90 font-medium">
             <span>Lang: {detectedLanguageName}</span>
           </div>
-        )}
-
-        {isRtl && (
-          <span
-            title="Right-to-Left (RTL) writing direction active"
-            className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 font-mono text-[9px] font-bold border border-amber-300/80 dark:border-amber-700/60"
-          >
-            RTL
-          </span>
         )}
       </div>
 
