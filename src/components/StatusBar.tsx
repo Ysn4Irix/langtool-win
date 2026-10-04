@@ -96,7 +96,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         <button
           onClick={onOpenSettings}
           title={`Connected to ${apiUrl} (Click to change)`}
-          className="flex items-center gap-1.5 px-2 py-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-850 transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-2 py-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
         >
           <span className={`w-2 h-2 rounded-full ${apiConnected ? "bg-emerald-500" : "bg-rose-500"}`} />
           <span className="text-[10px] text-slate-600 dark:text-slate-400 font-mono underline decoration-dotted underline-offset-2">

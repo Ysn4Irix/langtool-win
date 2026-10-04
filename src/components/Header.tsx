@@ -109,7 +109,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200/80 dark:hover:bg-slate-750 border border-slate-300 dark:border-slate-700/80 text-xs font-medium text-slate-700 dark:text-slate-200 transition-colors shadow-inner"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200/80 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700/80 text-xs font-medium text-slate-700 dark:text-slate-200 transition-colors shadow-inner"
         >
           <Globe className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
           <span className="max-w-[150px] truncate">{currentLangLabel}</span>
@@ -121,7 +121,7 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
 
         {langDropdownOpen && (
-          <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 w-64 max-h-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-750 rounded-xl shadow-2xl overflow-hidden z-50 flex flex-col animate-in fade-in zoom-in-95 duration-100">
+          <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 w-64 max-h-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50 flex flex-col animate-in fade-in zoom-in-95 duration-100">
             <div className="p-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 flex items-center gap-2">
               <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               <input
@@ -156,7 +156,7 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </button>
 
-              <div className="h-px bg-slate-150 dark:bg-slate-800 my-1 mx-2" />
+              <div className="h-px bg-slate-200 dark:bg-slate-800 my-1 mx-2" />
 
               {/* Language list */}
               {filteredLanguages.map((lang) => {
@@ -198,7 +198,7 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={onManualCheck}
           disabled={isChecking}
           title="Check text now (Ctrl+Enter)"
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-250 dark:border-slate-700/70 transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700/70 transition-colors disabled:opacity-50"
         >
           <RefreshCw
             className={`w-3.5 h-3.5 text-slate-500 dark:text-slate-400 ${
@@ -215,7 +215,7 @@ export const Header: React.FC<HeaderProps> = ({
           className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
             isCopied
               ? "bg-emerald-50 dark:bg-emerald-950/80 border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-300"
-              : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 border-slate-250 dark:border-slate-700/70 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+              : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 border-slate-200 dark:border-slate-700/70 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
           }`}
         >
           {isCopied ? (
@@ -268,7 +268,7 @@ export const Header: React.FC<HeaderProps> = ({
           className={`relative p-1.5 rounded-lg border transition-colors ${
             showSidebar
               ? "bg-sky-50 dark:bg-sky-500/15 border-sky-300 dark:border-sky-500/50 text-sky-700 dark:text-sky-300"
-              : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 border-slate-250 dark:border-slate-700/70 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+              : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 border-slate-200 dark:border-slate-700/70 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
           }`}
         >
           <SlidersHorizontal className="w-4 h-4" />
