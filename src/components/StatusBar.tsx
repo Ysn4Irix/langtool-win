@@ -88,8 +88,8 @@ export const StatusBar: React.FC<StatusBarProps> = ({
 
       {/* Right: API Server & Shortcuts hint */}
       <div className="flex items-center gap-3">
-        <span className="hidden md:inline text-slate-400 dark:text-slate-500 font-mono text-[10px]">
-          Ctrl+Enter check • Ctrl+Shift+C copy
+        <span className="hidden lg:inline text-slate-400 dark:text-slate-500 font-mono text-[10px]">
+          Ctrl+Enter check • Ctrl+Shift+R rephrase • Ctrl+Shift+C copy
         </span>
 
         {/* Clickable API Server pill */}

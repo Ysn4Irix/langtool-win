@@ -8,6 +8,7 @@ interface SuggestionPopoverProps {
   onApplyReplacement: (replacement: string) => void;
   onIgnore: (matchId: string) => void;
   onClose: () => void;
+  onRephraseSentence?: (sentence: string) => void;
 }
 
 export const SuggestionPopover: React.FC<SuggestionPopoverProps> = ({
@@ -16,6 +17,7 @@ export const SuggestionPopover: React.FC<SuggestionPopoverProps> = ({
   onApplyReplacement,
   onIgnore,
   onClose,
+  onRephraseSentence,
 }) => {
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -128,13 +130,28 @@ export const SuggestionPopover: React.FC<SuggestionPopoverProps> = ({
 
       {/* Footer Actions */}
       <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-        <button
-          onClick={() => onIgnore(match.id)}
-          className="flex items-center gap-1 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors py-1 px-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
-        >
-          <Ban className="w-3 h-3 text-slate-400 dark:text-slate-500" />
-          <span>Ignore this rule</span>
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => onIgnore(match.id)}
+            className="flex items-center gap-1 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors py-1 px-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <Ban className="w-3 h-3 text-slate-400 dark:text-slate-500" />
+            <span>Ignore</span>
+          </button>
+
+          {onRephraseSentence && match.sentence && (
+            <button
+              onClick={() => {
+                onRephraseSentence(match.sentence);
+                onClose();
+              }}
+              className="flex items-center gap-1 text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-medium py-1 px-1.5 rounded hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors"
+            >
+              <Sparkles className="w-3 h-3 text-amber-500" />
+              <span>Rephrase</span>
+            </button>
+          )}
+        </div>
         <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
           pos {match.offset}–{match.offset + match.length}
         </span>

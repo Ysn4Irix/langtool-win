@@ -26,6 +26,13 @@ A high-performance, ultra-lightweight Windows desktop application designed for r
 - 🪄 **Review & "Fix All" Panel**:
   - Collapsible side inspector categorizing all issues into Spelling, Grammar, and Style.
   - One-click **"Fix All"** button applies all top recommendations sequentially without offset corruption.
+- ✨ **AI Sentence Rephraser (Groq Cloud Llama 3.3)**:
+  - Generates 3 clearer, more natural sentence variations in under 250ms with 1-click in-place application:
+    - 🌿 **Natural & Fluent**: Native human cadence and effortless flow.
+    - 💼 **Professional**: Formal, articulate, corporate and academic tone.
+    - ⚡ **Concise**: Direct and punchy, eliminating fluff without losing meaning.
+  - Trigger via contextual floating pill, error popover button, or hotkey `Ctrl+Shift+R`.
+  - 100% free via Groq Cloud LPUs (no credit card required).
 - 🌐 **60+ Languages & Auto-Detect**:
   - Automatic language detection enabled by default (`language=auto`).
   - Searchable dropdown supporting over 60 languages (English US/GB, Spanish, French, German, Arabic, etc.).
@@ -41,6 +48,7 @@ A high-performance, ultra-lightweight Windows desktop application designed for r
   - Right-click tray menu has quick actions: Open, Minimize to Tray, and Exit.
 - ⌨️ **Keyboard Shortcuts**:
   - `Ctrl + Enter`: Trigger manual text check
+  - `Ctrl + Shift + R`: Rephrase sentence with Groq Cloud AI
   - `Ctrl + Shift + C`: Copy corrected text to clipboard
   - `Ctrl + ,`: Open Settings dialog (API URL, Theme)
   - `Ctrl + Shift + L`: Summon app to front (global Windows hotkey)

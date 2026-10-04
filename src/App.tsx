@@ -241,6 +241,7 @@ export default function App() {
           onApplyReplacement={handleApplyReplacement}
           onIgnoreMatch={handleIgnore}
           isChecking={isChecking}
+          onOpenSettings={() => setIsSettingsOpen(true)}
         />
 
         {showSidebar && (
