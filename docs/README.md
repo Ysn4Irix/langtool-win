@@ -1,6 +1,6 @@
-# LanguageTool Windows Desktop Client
+# langtool Windows Desktop Client
 
-A high-performance, ultra-lightweight Windows desktop application designed for real-time spelling and grammar checking powered by the self-hosted [LanguageTool API](https://langtool.ysnirix.xyz/v2/).
+A high-performance, ultra-lightweight Windows desktop application designed for real-time spelling and grammar checking powered by the self-hosted [LanguageTool API](https://langtool.ysnirix.xyz/v2/). Features the official minimalist geometric quill brand identity.
 
 ---
 
