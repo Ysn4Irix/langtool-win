@@ -90,7 +90,7 @@ export const Header: React.FC<HeaderProps> = ({
         <img
           src="/icon.png"
           alt="langtool icon"
-          className="w-8 h-8 rounded-lg shadow-md object-cover border border-slate-200 dark:border-slate-800"
+          className="w-8 h-8 rounded-lg object-cover border border-slate-200 dark:border-slate-800"
         />
         <div>
           <div className="flex items-center gap-2">

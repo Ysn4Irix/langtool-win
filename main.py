@@ -168,13 +168,34 @@ def quit_app():
             pass
     os._exit(0)
 
+from PIL import Image, ImageDraw
+
+def make_rounded_icon(image):
+    try:
+        img = image.convert("RGBA")
+        w, h = img.size
+        # 4x supersampling for smooth antialiased circular edges
+        mask = Image.new("L", (w * 4, h * 4), 0)
+        draw = ImageDraw.Draw(mask)
+        draw.ellipse((0, 0, w * 4, h * 4), fill=255)
+        mask = mask.resize((w, h), Image.Resampling.LANCZOS)
+
+        rounded = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+        rounded.paste(img, (0, 0), mask)
+        return rounded
+    except Exception:
+        return image
+
 def setup_system_tray(icon_path):
     global tray_icon
     try:
         if os.path.exists(icon_path):
             image = Image.open(icon_path)
         else:
-            image = Image.new('RGB', (32, 32), color=(14, 165, 233))
+            image = Image.new('RGBA', (32, 32), color=(14, 165, 233, 255))
+
+        # Ensure icon is smoothly rounded with transparent edges
+        image = make_rounded_icon(image)
 
         menu = pystray.Menu(
             pystray.MenuItem("Open langtool", lambda icon, item: show_window(), default=True),
