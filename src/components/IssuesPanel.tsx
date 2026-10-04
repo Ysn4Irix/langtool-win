@@ -13,6 +13,7 @@ interface IssuesPanelProps {
   isRtl?: boolean;
   apiConnected?: boolean;
   onOpenSettings?: () => void;
+  isMiniMode?: boolean;
 }
 
 export const IssuesPanel: React.FC<IssuesPanelProps> = ({
@@ -26,6 +27,7 @@ export const IssuesPanel: React.FC<IssuesPanelProps> = ({
   isRtl = false,
   apiConnected = true,
   onOpenSettings,
+  isMiniMode = false,
 }) => {
   const [filter, setFilter] = useState<"all" | IssueCategoryType>("all");
 
@@ -41,7 +43,13 @@ export const IssuesPanel: React.FC<IssuesPanelProps> = ({
   const fixableCount = matches.filter((m) => m.replacements && m.replacements.length > 0).length;
 
   return (
-    <aside className="w-80 md:w-96 border-l border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 flex flex-col h-full select-none shrink-0 z-20 transition-colors animate-sidebar-in">
+    <aside
+      className={
+        isMiniMode
+          ? "w-full h-full bg-white dark:bg-slate-900 flex flex-col select-none z-20 transition-colors overflow-hidden"
+          : "w-80 md:w-96 border-l border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 flex flex-col h-full select-none shrink-0 z-20 transition-colors animate-sidebar-in"
+      }
+    >
       {/* Panel Header */}
       <div className="p-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
         <div className="flex items-center gap-2">

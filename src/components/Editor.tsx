@@ -308,7 +308,7 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
             ref={backdropRef}
             dir={isRtl ? "rtl" : "ltr"}
             aria-hidden="true"
-            className={`absolute inset-0 p-6 md:p-8 font-sans text-base leading-relaxed tracking-normal whitespace-pre-wrap break-words overflow-y-auto pointer-events-none select-none text-transparent z-0 ${
+            className={`absolute inset-0 p-3.5 sm:p-6 md:p-8 font-sans text-base leading-relaxed tracking-normal whitespace-pre-wrap break-words overflow-y-auto pointer-events-none select-none text-transparent z-0 ${
               isRtl ? "text-right" : "text-left"
             }`}
           >
@@ -340,11 +340,11 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
             placeholder={
               isRtl
                 ? "اكتب أو الصق النص هنا للتحقق من الأخطاء الإملائية والنحوية والأسلوب..."
-                : "Paste or write your text here to check spelling, grammar, and style with LanguageTool..."
+                : "Paste or write your text here to check spelling, grammar, and style with langtool..."
             }
             spellCheck={false}
             autoFocus
-            className={`absolute inset-0 w-full h-full p-6 md:p-8 font-sans text-base leading-relaxed tracking-normal whitespace-pre-wrap break-words overflow-y-auto bg-transparent text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 resize-none outline-none caret-sky-600 dark:caret-sky-400 z-10 selection:bg-sky-500/20 dark:selection:bg-sky-500/30 selection:text-slate-900 dark:selection:text-white ${
+            className={`absolute inset-0 w-full h-full p-3.5 sm:p-6 md:p-8 font-sans text-base leading-relaxed tracking-normal whitespace-pre-wrap break-words overflow-y-auto bg-transparent text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 resize-none outline-none caret-sky-600 dark:caret-sky-400 z-10 selection:bg-sky-500/20 dark:selection:bg-sky-500/30 selection:text-slate-900 dark:selection:text-white ${
               isRtl ? "text-right" : "text-left"
             }`}
           />

@@ -13,6 +13,7 @@ interface StatusBarProps {
   apiUrl: string;
   onOpenSettings: () => void;
   onRephrase?: () => void;
+  isMiniMode?: boolean;
 }
 
 export const StatusBar: React.FC<StatusBarProps> = ({
@@ -27,6 +28,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   apiUrl,
   onOpenSettings,
   onRephrase,
+  isMiniMode = false,
 }) => {
   // Extract hostname for clean pill display
   let displayHost = "API Server";
@@ -35,6 +37,42 @@ export const StatusBar: React.FC<StatusBarProps> = ({
     displayHost = parsed.hostname;
   } catch {
     displayHost = apiUrl.replace(/https?:\/\//, "").split("/")[0] || "API";
+  }
+
+  if (isMiniMode) {
+    return (
+      <footer className="h-6 border-t border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 px-2.5 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 select-none z-20 transition-colors">
+        <div className="flex items-center gap-1.5">
+          <span><strong className="text-slate-700 dark:text-slate-300 font-medium">{words}</strong>w</span>
+          <span className="text-slate-300 dark:text-slate-700">•</span>
+          <span><strong className="text-slate-700 dark:text-slate-300 font-medium">{chars}</strong>c</span>
+        </div>
+
+        <div className="flex items-center gap-1 font-medium">
+          {isChecking ? (
+            <span className="flex items-center gap-1 text-sky-500">
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-ping" />
+              Checking...
+            </span>
+          ) : !apiConnected ? (
+            <span className="text-rose-500">Offline</span>
+          ) : issueCount === 0 ? (
+            <span className="text-emerald-500">Clean</span>
+          ) : (
+            <span className="text-amber-500">{issueCount} issue{issueCount > 1 ? "s" : ""}</span>
+          )}
+        </div>
+
+        <button
+          onClick={onOpenSettings}
+          title={`Connected to ${apiUrl}`}
+          className="flex items-center gap-1 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors cursor-pointer"
+        >
+          <span className={`w-1.5 h-1.5 rounded-full ${apiConnected ? "bg-emerald-500" : "bg-rose-500"}`} />
+          <span className="truncate max-w-[70px] font-mono text-[9px]">{displayHost}</span>
+        </button>
+      </footer>
+    );
   }
 
   return (

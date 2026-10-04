@@ -10,12 +10,14 @@ import { applyReplacement, applyAllReplacements, getStats } from "./utils/textUt
 import { useTheme } from "./utils/useTheme";
 import { computeIsRtl } from "./utils/rtlUtils";
 import { useToast } from "./context/ToastContext";
+import { useDesktopWindowState } from "./utils/useDesktopWindowState";
 
 const STORAGE_TEXT_KEY = "langtool_user_text";
 
 export default function App() {
   const { theme, resolvedTheme, setTheme, toggleTheme } = useTheme();
   const toast = useToast();
+  const { isMiniMode, isPinned, toggleMiniMode, togglePin } = useDesktopWindowState();
 
   const [text, setText] = useState<string>(() => {
     if (typeof window === "undefined") return "";
@@ -36,6 +38,15 @@ export default function App() {
   const [showSidebar, setShowSidebar] = useState<boolean>(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [apiUrl, setApiUrl] = useState<string>(getStoredApiUrl);
+
+  // Close sidebar automatically when entering mini mode so the editor is full width
+  const prevMiniModeRef = useRef(isMiniMode);
+  useEffect(() => {
+    if (!prevMiniModeRef.current && isMiniMode) {
+      setShowSidebar(false);
+    }
+    prevMiniModeRef.current = isMiniMode;
+  }, [isMiniMode]);
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -284,6 +295,10 @@ export default function App() {
         resolvedTheme={resolvedTheme}
         onToggleTheme={toggleTheme}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        isMiniMode={isMiniMode}
+        isPinned={isPinned}
+        onToggleMiniMode={toggleMiniMode}
+        onTogglePin={togglePin}
       />
 
       {/* Main Workspace: Editor + Review Panel */}
@@ -304,18 +319,39 @@ export default function App() {
         />
 
         {showSidebar && (
-          <IssuesPanel
-            matches={visibleMatches}
-            selectedMatchId={selectedMatch?.id}
-            onSelectIssue={setSelectedMatch}
-            onApplyReplacement={handleApplyReplacement}
-            onApplyAll={handleApplyAll}
-            onIgnore={handleIgnore}
-            onClose={() => setShowSidebar(false)}
-            isRtl={isRtl}
-            apiConnected={apiConnected}
-            onOpenSettings={() => setIsSettingsOpen(true)}
-          />
+          isMiniMode ? (
+            <div className="absolute inset-0 z-30 bg-slate-950/40 backdrop-blur-xs flex flex-col justify-end animate-in fade-in duration-150">
+              <div className="h-[88%] bg-white dark:bg-slate-900 rounded-t-2xl shadow-2xl flex flex-col overflow-hidden border-t border-slate-200 dark:border-slate-800 animate-in slide-in-from-bottom duration-200">
+                <IssuesPanel
+                  matches={visibleMatches}
+                  selectedMatchId={selectedMatch?.id}
+                  onSelectIssue={setSelectedMatch}
+                  onApplyReplacement={handleApplyReplacement}
+                  onApplyAll={handleApplyAll}
+                  onIgnore={handleIgnore}
+                  onClose={() => setShowSidebar(false)}
+                  isRtl={isRtl}
+                  apiConnected={apiConnected}
+                  onOpenSettings={() => setIsSettingsOpen(true)}
+                  isMiniMode={true}
+                />
+              </div>
+            </div>
+          ) : (
+            <IssuesPanel
+              matches={visibleMatches}
+              selectedMatchId={selectedMatch?.id}
+              onSelectIssue={setSelectedMatch}
+              onApplyReplacement={handleApplyReplacement}
+              onApplyAll={handleApplyAll}
+              onIgnore={handleIgnore}
+              onClose={() => setShowSidebar(false)}
+              isRtl={isRtl}
+              apiConnected={apiConnected}
+              onOpenSettings={() => setIsSettingsOpen(true)}
+              isMiniMode={false}
+            />
+          )
         )}
       </main>
 
@@ -332,6 +368,7 @@ export default function App() {
         apiUrl={apiUrl}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onRephrase={text.trim().length > 0 ? handleTriggerRephrase : undefined}
+        isMiniMode={isMiniMode}
       />
 
       {/* Settings Modal */}

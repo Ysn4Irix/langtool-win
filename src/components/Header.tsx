@@ -12,6 +12,9 @@ import {
   Sun,
   Moon,
   Settings,
+  Pin,
+  Minimize2,
+  Maximize2,
 } from "lucide-react";
 import { Language, DetectedLanguage } from "../types/langtool";
 import { ThemePreference } from "../utils/useTheme";
@@ -34,6 +37,10 @@ interface HeaderProps {
   resolvedTheme: "light" | "dark";
   onToggleTheme: () => void;
   onOpenSettings: () => void;
+  isMiniMode?: boolean;
+  isPinned?: boolean;
+  onToggleMiniMode?: () => void;
+  onTogglePin?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -53,6 +60,10 @@ export const Header: React.FC<HeaderProps> = ({
   resolvedTheme,
   onToggleTheme,
   onOpenSettings,
+  isMiniMode = false,
+  isPinned = false,
+  onToggleMiniMode,
+  onTogglePin,
 }) => {
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -85,6 +96,191 @@ export const Header: React.FC<HeaderProps> = ({
       l.code.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const renderLanguageDropdown = () => (
+    <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 w-64 max-h-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50 flex flex-col animate-in fade-in zoom-in-95 slide-in-from-top-1.5 duration-150">
+      <div className="p-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 flex items-center gap-2">
+        <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+        <input
+          type="text"
+          placeholder="Search languages..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          autoFocus
+          className="w-full bg-transparent text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            className="p-0.5 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs"
+          >
+            <Trash2 className="w-3 h-3" />
+          </button>
+        )}
+      </div>
+
+      <div className="overflow-y-auto max-h-60 py-1">
+        {/* Auto detect option */}
+        <button
+          onClick={() => {
+            onSelectLanguage("auto");
+            setLangDropdownOpen(false);
+          }}
+          className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all duration-100 active:scale-[0.99] ${
+            selectedLanguage === "auto"
+              ? "text-sky-600 dark:text-sky-400 font-semibold bg-sky-50 dark:bg-sky-500/10"
+              : "text-slate-700 dark:text-slate-300"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
+            <span>Auto-detect</span>
+          </div>
+          {selectedLanguage === "auto" && (
+            <Check className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
+          )}
+        </button>
+
+        <div className="h-px bg-slate-200 dark:bg-slate-800 my-1 mx-2" />
+
+        {/* Language list */}
+        {filteredLanguages.map((lang) => {
+          const isSelected =
+            selectedLanguage === lang.code || selectedLanguage === lang.longCode;
+          return (
+            <button
+              key={lang.longCode || lang.code}
+              onClick={() => {
+                onSelectLanguage(lang.code);
+                setLangDropdownOpen(false);
+              }}
+              className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all duration-100 active:scale-[0.99] ${
+                isSelected
+                  ? "text-sky-600 dark:text-sky-400 font-semibold bg-sky-50 dark:bg-sky-500/10"
+                  : "text-slate-700 dark:text-slate-300"
+              }`}
+            >
+              <span className="truncate">{lang.name}</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono ml-2 uppercase">
+                {lang.code}
+              </span>
+            </button>
+          );
+        })}
+
+        {filteredLanguages.length === 0 && (
+          <div className="p-3 text-center text-xs text-slate-400">No language found</div>
+        )}
+      </div>
+    </div>
+  );
+
+  // Compact Mini Mode Header
+  if (isMiniMode) {
+    return (
+      <header className="h-11 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 backdrop-blur px-2.5 flex items-center justify-between select-none z-30 transition-colors">
+        {/* Brand & Language */}
+        <div className="flex items-center gap-2">
+          <img
+            src="/icon.png"
+            alt="langtool icon"
+            className="w-6 h-6 rounded-md object-cover border border-slate-200 dark:border-slate-800 shadow-2xs"
+          />
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+              title={`Language: ${currentLangLabel}`}
+              className="flex items-center gap-1 px-1.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[11px] font-medium text-slate-700 dark:text-slate-200 transition-all duration-150 active:scale-95 border border-slate-200 dark:border-slate-700/60"
+            >
+              <Globe className="w-3 h-3 text-sky-500" />
+              <span className="max-w-[70px] truncate">{currentLangObj?.code?.toUpperCase() || "AUTO"}</span>
+              <ChevronDown className="w-3 h-3 text-slate-400" />
+            </button>
+            {langDropdownOpen && renderLanguageDropdown()}
+          </div>
+        </div>
+
+        {/* Right mini controls */}
+        <div className="flex items-center gap-1">
+          {/* AI Rephrase icon */}
+          {onRephrase && hasText && (
+            <button
+              onClick={onRephrase}
+              title="Rephrase active sentence with Groq Cloud (Ctrl+Shift+R)"
+              className="p-1 rounded-md bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 text-amber-600 dark:text-amber-400 border border-amber-300/60 dark:border-amber-600/50 transition-all duration-150 active:scale-95"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {/* Copy button */}
+          <button
+            onClick={onCopyText}
+            title="Copy text (Ctrl+Shift+C)"
+            className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-all duration-150 active:scale-95"
+          >
+            <Copy className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Clear button */}
+          <button
+            onClick={onClearText}
+            title="Clear all text"
+            className="p-1 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-all duration-150 active:scale-95"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Review drawer toggle */}
+          <button
+            onClick={onToggleSidebar}
+            title={showSidebar ? "Close review drawer" : "Open review drawer"}
+            className={`relative p-1 rounded-md transition-all duration-150 active:scale-95 ${
+              showSidebar
+                ? "bg-sky-50 dark:bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-300 dark:border-sky-500/50"
+                : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+            }`}
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            {issueCounts.total > 0 && (
+              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-rose-500 text-white text-[8px] font-bold flex items-center justify-center shadow">
+                {issueCounts.total > 9 ? "9+" : issueCounts.total}
+              </span>
+            )}
+          </button>
+
+          <div className="h-3 w-px bg-slate-200 dark:bg-slate-800 mx-0.5" />
+
+          {/* Pin toggle */}
+          {onTogglePin && (
+            <button
+              onClick={onTogglePin}
+              title={isPinned ? "Unpin window" : "Pin window Always-on-Top"}
+              className={`p-1 rounded-md transition-all duration-150 active:scale-95 ${
+                isPinned
+                  ? "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-600/60 shadow-2xs"
+                  : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+              }`}
+            >
+              <Pin className={`w-3.5 h-3.5 transition-transform duration-200 ${isPinned ? "fill-amber-500 rotate-45" : ""}`} />
+            </button>
+          )}
+
+          {/* Expand to Studio Mode */}
+          {onToggleMiniMode && (
+            <button
+              onClick={onToggleMiniMode}
+              title="Expand to Studio Mode (Ctrl+Shift+P)"
+              className="p-1 rounded-md bg-sky-50 dark:bg-sky-500/15 hover:bg-sky-100 dark:hover:bg-sky-500/25 text-sky-700 dark:text-sky-300 border border-sky-300/60 dark:border-sky-500/40 transition-all duration-150 active:scale-95"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      </header>
+    );
+  }
+
+  // Full Studio Mode Header
   return (
     <header className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 backdrop-blur px-4 flex items-center justify-between select-none z-30 transition-colors">
       {/* Brand / Logo */}
@@ -124,83 +320,7 @@ export const Header: React.FC<HeaderProps> = ({
           />
         </button>
 
-        {langDropdownOpen && (
-          <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 w-64 max-h-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50 flex flex-col animate-in fade-in zoom-in-95 slide-in-from-top-1.5 duration-150">
-            <div className="p-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 flex items-center gap-2">
-              <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              <input
-                type="text"
-                placeholder="Search languages..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                autoFocus
-                className="w-full bg-transparent text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="p-0.5 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </button>
-              )}
-            </div>
-
-            <div className="overflow-y-auto max-h-60 py-1">
-              {/* Auto detect option */}
-              <button
-                onClick={() => {
-                  onSelectLanguage("auto");
-                  setLangDropdownOpen(false);
-                }}
-                className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all duration-100 active:scale-[0.99] ${
-                  selectedLanguage === "auto"
-                    ? "text-sky-600 dark:text-sky-400 font-semibold bg-sky-50 dark:bg-sky-500/10"
-                    : "text-slate-700 dark:text-slate-300"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
-                  <span>Auto-detect</span>
-                </div>
-                {selectedLanguage === "auto" && (
-                  <Check className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
-                )}
-              </button>
-
-              <div className="h-px bg-slate-200 dark:bg-slate-800 my-1 mx-2" />
-
-              {/* Language list */}
-              {filteredLanguages.map((lang) => {
-                const isSelected =
-                  selectedLanguage === lang.code || selectedLanguage === lang.longCode;
-                return (
-                  <button
-                    key={lang.longCode || lang.code}
-                    onClick={() => {
-                      onSelectLanguage(lang.code);
-                      setLangDropdownOpen(false);
-                    }}
-                    className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all duration-100 active:scale-[0.99] ${
-                      isSelected
-                        ? "text-sky-600 dark:text-sky-400 font-semibold bg-sky-50 dark:bg-sky-500/10"
-                        : "text-slate-700 dark:text-slate-300"
-                    }`}
-                  >
-                    <span className="truncate">{lang.name}</span>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono ml-2 uppercase">
-                      {lang.code}
-                    </span>
-                  </button>
-                );
-              })}
-
-              {filteredLanguages.length === 0 && (
-                <div className="p-3 text-center text-xs text-slate-400">No language found</div>
-              )}
-            </div>
-          </div>
-        )}
+        {langDropdownOpen && renderLanguageDropdown()}
       </div>
 
       {/* Right Action Buttons */}
@@ -278,6 +398,34 @@ export const Header: React.FC<HeaderProps> = ({
 
         <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-0.5" />
 
+        {/* Always on Top (Pin) Button */}
+        {onTogglePin && (
+          <button
+            onClick={onTogglePin}
+            title={isPinned ? "Unpin window (Always on Top is ON)" : "Pin window Always-on-Top"}
+            className={`group p-1.5 rounded-lg border transition-all duration-150 active:scale-90 ${
+              isPinned
+                ? "bg-amber-100 dark:bg-amber-500/20 border-amber-300 dark:border-amber-600/60 text-amber-700 dark:text-amber-300 shadow-2xs"
+                : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 border-slate-200 dark:border-slate-700/70 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+            }`}
+          >
+            <Pin className={`w-4 h-4 transition-transform duration-200 group-hover:scale-110 ${isPinned ? "fill-amber-500 rotate-45 text-amber-600 dark:text-amber-400" : ""}`} />
+          </button>
+        )}
+
+        {/* Mini Mode Toggle */}
+        {onToggleMiniMode && (
+          <button
+            onClick={onToggleMiniMode}
+            title="Switch to Mini Sticky Window (Ctrl+Shift+P)"
+            className="group p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700/70 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-all duration-150 active:scale-90"
+          >
+            <Minimize2 className="w-4 h-4 transition-transform duration-200 group-hover:scale-110" />
+          </button>
+        )}
+
+        <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-0.5" />
+
         {/* Toggle Sidebar Button */}
         <button
           onClick={onToggleSidebar}
@@ -297,6 +445,5 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
       </div>
     </header>
-
   );
 };

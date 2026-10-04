@@ -68,6 +68,205 @@ def get_window_hwnd():
         pass
     return None
 
+def set_window_topmost(hwnd, on_top: bool):
+    """Pin or unpin the window on top using Win32 SetWindowPos."""
+    if not hwnd:
+        return
+    try:
+        user32 = ctypes.windll.user32
+        HWND_TOPMOST = -1
+        HWND_NOTOPMOST = -2
+        SWP_NOMOVE = 0x0002
+        SWP_NOSIZE = 0x0001
+        SWP_SHOWWINDOW = 0x0040
+        user32.SetWindowPos(
+            hwnd,
+            HWND_TOPMOST if on_top else HWND_NOTOPMOST,
+            0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW
+        )
+    except Exception as e:
+        print("SetWindowPos topmost error:", e)
+
+class DesktopBridge:
+    def __init__(self):
+        self.state = {
+            "mode": "studio",
+            "is_pinned": False,
+            "studio": {
+                "width": 1020,
+                "height": 720,
+                "x": None,
+                "y": None,
+                "maximized": False,
+            },
+            "mini": {
+                "width": 360,
+                "height": 460,
+                "x": None,
+                "y": None,
+            }
+        }
+
+    def init_from_saved(self, saved_data):
+        if not saved_data or not isinstance(saved_data, dict):
+            return
+        mode = saved_data.get("mode", "studio")
+        if mode in ("studio", "mini"):
+            self.state["mode"] = mode
+        self.state["is_pinned"] = bool(saved_data.get("is_pinned", False))
+
+        s_data = saved_data.get("studio") if isinstance(saved_data.get("studio"), dict) else {}
+        self.state["studio"]["width"] = max(int(s_data.get("width", saved_data.get("width", 1020))), 760)
+        self.state["studio"]["height"] = max(int(s_data.get("height", saved_data.get("height", 720))), 520)
+        sx = s_data.get("x", saved_data.get("x"))
+        sy = s_data.get("y", saved_data.get("y"))
+        if is_position_visible(sx, sy):
+            self.state["studio"]["x"] = int(sx)
+            self.state["studio"]["y"] = int(sy)
+        self.state["studio"]["maximized"] = bool(s_data.get("maximized", saved_data.get("maximized", False)))
+
+        m_data = saved_data.get("mini") if isinstance(saved_data.get("mini"), dict) else {}
+        self.state["mini"]["width"] = max(int(m_data.get("width", 360)), 320)
+        self.state["mini"]["height"] = max(int(m_data.get("height", 460)), 240)
+        mx = m_data.get("x")
+        my = m_data.get("y")
+        if is_position_visible(mx, my):
+            self.state["mini"]["x"] = int(mx)
+            self.state["mini"]["y"] = int(my)
+
+    def get_window_state(self):
+        return {
+            "mode": self.state["mode"],
+            "isPinned": bool(self.state["is_pinned"]),
+            "isMiniMode": self.state["mode"] == "mini",
+        }
+
+    def notify_frontend(self):
+        global main_window
+        if not main_window:
+            return
+        try:
+            payload = json.dumps(self.get_window_state())
+            main_window.evaluate_js(f"window.__onDesktopWindowStateChanged && window.__onDesktopWindowStateChanged({payload});")
+        except Exception as e:
+            print("notify_frontend error:", e)
+
+    def toggle_always_on_top(self):
+        self.state["is_pinned"] = not self.state["is_pinned"]
+        hwnd = get_window_hwnd()
+        if hwnd:
+            set_window_topmost(hwnd, self.state["is_pinned"])
+        save_window_state()
+        self.notify_frontend()
+        return self.get_window_state()
+
+    def set_always_on_top(self, enable: bool):
+        self.state["is_pinned"] = bool(enable)
+        hwnd = get_window_hwnd()
+        if hwnd:
+            set_window_topmost(hwnd, self.state["is_pinned"])
+        save_window_state()
+        self.notify_frontend()
+        return self.get_window_state()
+
+    def toggle_mini_mode(self):
+        show_window()
+        if self.state["mode"] == "studio":
+            return self.set_mini_mode(True)
+        else:
+            return self.set_mini_mode(False)
+
+    def set_mini_mode(self, enable: bool):
+        global main_window
+        if not main_window:
+            return self.get_window_state()
+
+        hwnd = get_window_hwnd()
+        user32 = ctypes.windll.user32
+
+        if enable and self.state["mode"] != "mini":
+            # Record current studio dimensions before shrinking
+            if hwnd and not user32.IsIconic(hwnd):
+                is_max = bool(user32.IsZoomed(hwnd))
+                self.state["studio"]["maximized"] = is_max
+                if not is_max:
+                    w = getattr(main_window, "width", None)
+                    h = getattr(main_window, "height", None)
+                    x = getattr(main_window, "x", None)
+                    y = getattr(main_window, "y", None)
+                    if w and w >= 760: self.state["studio"]["width"] = int(w)
+                    if h and h >= 520: self.state["studio"]["height"] = int(h)
+                    if is_position_visible(x, y):
+                        self.state["studio"]["x"] = int(x)
+                        self.state["studio"]["y"] = int(y)
+
+            self.state["mode"] = "mini"
+            self.state["is_pinned"] = True
+
+            if hwnd and user32.IsZoomed(hwnd):
+                main_window.restore()
+
+            mw = self.state["mini"]["width"]
+            mh = self.state["mini"]["height"]
+            mx = self.state["mini"]["x"]
+            my = self.state["mini"]["y"]
+
+            if not is_position_visible(mx, my):
+                sw = user32.GetSystemMetrics(0)
+                sh = user32.GetSystemMetrics(1)
+                mx = max(40, sw - mw - 40)
+                my = max(40, sh - mh - 60)
+                self.state["mini"]["x"] = mx
+                self.state["mini"]["y"] = my
+
+            main_window.resize(mw, mh)
+            main_window.move(mx, my)
+            if hwnd:
+                set_window_topmost(hwnd, True)
+                force_activate_window(hwnd)
+
+        elif not enable and self.state["mode"] != "studio":
+            # Record current mini dimensions before expanding
+            w = getattr(main_window, "width", None)
+            h = getattr(main_window, "height", None)
+            x = getattr(main_window, "x", None)
+            y = getattr(main_window, "y", None)
+            if w: self.state["mini"]["width"] = int(w)
+            if h: self.state["mini"]["height"] = int(h)
+            if is_position_visible(x, y):
+                self.state["mini"]["x"] = int(x)
+                self.state["mini"]["y"] = int(y)
+
+            self.state["mode"] = "studio"
+            self.state["is_pinned"] = False
+
+            sw = self.state["studio"]["width"]
+            sh = self.state["studio"]["height"]
+            sx = self.state["studio"]["x"]
+            sy = self.state["studio"]["y"]
+
+            main_window.resize(sw, sh)
+            if is_position_visible(sx, sy):
+                main_window.move(sx, sy)
+            else:
+                screen_w = user32.GetSystemMetrics(0)
+                screen_h = user32.GetSystemMetrics(1)
+                main_window.move(max(80, (screen_w - sw) // 2), max(60, (screen_h - sh) // 2))
+
+            if hwnd:
+                set_window_topmost(hwnd, False)
+                if self.state["studio"].get("maximized"):
+                    time.sleep(0.05)
+                    main_window.maximize()
+                force_activate_window(hwnd)
+
+        save_window_state()
+        self.notify_frontend()
+        return self.get_window_state()
+
+desktop_bridge = DesktopBridge()
+
 def force_activate_window(hwnd):
     """Restore and bring the window to the foreground on Windows."""
     if not hwnd:
@@ -106,50 +305,14 @@ def load_window_state():
     if os.path.exists(state_file):
         try:
             with open(state_file, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                width = max(int(data.get("width", 1020)), 760)
-                height = max(int(data.get("height", 720)), 520)
-                x = data.get("x")
-                y = data.get("y")
-                maximized = bool(data.get("maximized", False))
-
-                # Ensure coordinates are reasonable numbers
-                if x is not None and isinstance(x, (int, float)):
-                    x = int(x)
-                else:
-                    x = None
-
-                if y is not None and isinstance(y, (int, float)):
-                    y = int(y)
-                else:
-                    y = None
-
-                # Never load off-screen or minimized coordinates (-32000)
-                if not is_position_visible(x, y):
-                    x = None
-                    y = None
-
-                return {
-                    "width": width,
-                    "height": height,
-                    "x": x,
-                    "y": y,
-                    "maximized": maximized
-                }
+                return json.load(f)
         except Exception as e:
             print("Failed to read window_state.json:", e)
-
-    return {
-        "width": 1020,
-        "height": 720,
-        "x": None,
-        "y": None,
-        "maximized": False
-    }
+    return {}
 
 def save_window_state():
-    global main_window
-    if not main_window:
+    global main_window, desktop_bridge
+    if not main_window or not desktop_bridge:
         return
 
     with save_lock:
@@ -157,44 +320,41 @@ def save_window_state():
             hwnd = get_window_hwnd()
             if hwnd:
                 user32 = ctypes.windll.user32
-                # If window is currently minimized (IsIconic), NEVER save position/size
                 if user32.IsIconic(hwnd):
                     return
 
-            state_file = get_state_file_path()
-            current_data = {}
-            if os.path.exists(state_file):
-                try:
-                    with open(state_file, "r", encoding="utf-8") as f:
-                        current_data = json.load(f)
-                except Exception:
-                    pass
+            w = getattr(main_window, "width", None)
+            h = getattr(main_window, "height", None)
+            x = getattr(main_window, "x", None)
+            y = getattr(main_window, "y", None)
 
-            is_maximized = False
-            if hwnd:
-                user32 = ctypes.windll.user32
-                is_maximized = bool(user32.IsZoomed(hwnd))
-
-            if not is_maximized:
-                w = getattr(main_window, "width", None)
-                h = getattr(main_window, "height", None)
-                x = getattr(main_window, "x", None)
-                y = getattr(main_window, "y", None)
-
-                if w and w >= 760:
-                    current_data["width"] = int(w)
-                if h and h >= 520:
-                    current_data["height"] = int(h)
-
-                # Only save position if strictly visible and not offscreen / minimized
+            if desktop_bridge.state["mode"] == "mini":
+                if w and w >= 300:
+                    desktop_bridge.state["mini"]["width"] = int(w)
+                if h and h >= 200:
+                    desktop_bridge.state["mini"]["height"] = int(h)
                 if is_position_visible(x, y):
-                    current_data["x"] = int(x)
-                    current_data["y"] = int(y)
+                    desktop_bridge.state["mini"]["x"] = int(x)
+                    desktop_bridge.state["mini"]["y"] = int(y)
+            else:
+                is_maximized = False
+                if hwnd:
+                    user32 = ctypes.windll.user32
+                    is_maximized = bool(user32.IsZoomed(hwnd))
 
-            current_data["maximized"] = is_maximized
+                if not is_maximized:
+                    if w and w >= 760:
+                        desktop_bridge.state["studio"]["width"] = int(w)
+                    if h and h >= 520:
+                        desktop_bridge.state["studio"]["height"] = int(h)
+                    if is_position_visible(x, y):
+                        desktop_bridge.state["studio"]["x"] = int(x)
+                        desktop_bridge.state["studio"]["y"] = int(y)
+                desktop_bridge.state["studio"]["maximized"] = is_maximized
 
+            state_file = get_state_file_path()
             with open(state_file, "w", encoding="utf-8") as f:
-                json.dump(current_data, f, indent=2)
+                json.dump(desktop_bridge.state, f, indent=2)
         except Exception as e:
             print("Error saving window state:", e)
 
@@ -245,7 +405,7 @@ def start_static_server(port, directory):
     return httpd
 
 def show_window():
-    global main_window
+    global main_window, desktop_bridge
     if not main_window:
         return
 
@@ -258,15 +418,15 @@ def show_window():
             curr_x = getattr(main_window, 'x', None)
             curr_y = getattr(main_window, 'y', None)
             if not is_position_visible(curr_x, curr_y):
-                saved = load_window_state()
-                tx = saved.get("x")
-                ty = saved.get("y")
+                mode = desktop_bridge.state["mode"]
+                geom = desktop_bridge.state["mini"] if mode == "mini" else desktop_bridge.state["studio"]
+                tx = geom.get("x")
+                ty = geom.get("y")
                 if not is_position_visible(tx, ty):
-                    # Center on primary monitor
                     sw = user32.GetSystemMetrics(0)
                     sh = user32.GetSystemMetrics(1)
-                    ww = saved.get("width", 1020)
-                    wh = saved.get("height", 720)
+                    ww = geom.get("width", 1020 if mode == "studio" else 360)
+                    wh = geom.get("height", 720 if mode == "studio" else 460)
                     tx = max(80, (sw - ww) // 2)
                     ty = max(60, (sh - wh) // 2)
                 main_window.move(int(tx), int(ty))
@@ -277,8 +437,10 @@ def show_window():
         main_window.show()
         main_window.restore()
 
-        # Step 3: Windows foreground activation
+        # Step 3: Windows foreground activation & topmost state
         if hwnd:
+            if desktop_bridge.state["is_pinned"]:
+                set_window_topmost(hwnd, True)
             force_activate_window(hwnd)
 
     except Exception as e:
@@ -335,7 +497,7 @@ def make_rounded_icon(image):
         return image
 
 def setup_system_tray(icon_path):
-    global tray_icon
+    global tray_icon, desktop_bridge
     try:
         if os.path.exists(icon_path):
             image = Image.open(icon_path)
@@ -347,6 +509,8 @@ def setup_system_tray(icon_path):
 
         menu = pystray.Menu(
             pystray.MenuItem("Open langtool", lambda icon, item: show_window(), default=True),
+            pystray.MenuItem("Toggle Mini Mode (Ctrl+Shift+P)", lambda icon, item: desktop_bridge.toggle_mini_mode()),
+            pystray.MenuItem("Toggle Always on Top", lambda icon, item: desktop_bridge.toggle_always_on_top()),
             pystray.MenuItem("Hide to Tray", lambda icon, item: hide_window()),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem("langtool API: langtool.ysnirix.xyz", lambda icon, item: None, enabled=False),
@@ -361,14 +525,16 @@ def setup_system_tray(icon_path):
         print("System tray initialization warning:", e)
 
 def setup_global_hotkey():
+    global desktop_bridge
     try:
         import keyboard
         keyboard.add_hotkey('ctrl+shift+l', show_window)
+        keyboard.add_hotkey('ctrl+shift+p', lambda: desktop_bridge.toggle_mini_mode())
     except Exception as e:
         print("Global hotkey warning:", e)
 
 def main():
-    global main_window
+    global main_window, desktop_bridge
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
     dist_dir = os.path.join(base_dir, "dist")
@@ -383,6 +549,7 @@ def main():
     app_url = f"http://127.0.0.1:{port}"
 
     saved_state = load_window_state()
+    desktop_bridge.init_from_saved(saved_state)
 
     setup_system_tray(icon_path)
     setup_global_hotkey()
@@ -390,20 +557,24 @@ def main():
     system_is_dark = is_system_dark_theme()
     initial_bg = "#0f172a" if system_is_dark else "#f8fafc"
 
+    mode = desktop_bridge.state["mode"]
+    geom = desktop_bridge.state["mini"] if mode == "mini" else desktop_bridge.state["studio"]
+
     window_kwargs = {
         "title": "langtool - Desktop Assistant",
         "url": app_url,
-        "width": saved_state["width"],
-        "height": saved_state["height"],
-        "min_size": (760, 520),
+        "width": geom["width"],
+        "height": geom["height"],
+        "min_size": (320, 240),
         "background_color": initial_bg,
         "text_select": True,
         "resizable": True,
+        "js_api": desktop_bridge,
     }
 
-    if saved_state["x"] is not None and saved_state["y"] is not None:
-        window_kwargs["x"] = saved_state["x"]
-        window_kwargs["y"] = saved_state["y"]
+    if geom.get("x") is not None and geom.get("y") is not None:
+        window_kwargs["x"] = geom["x"]
+        window_kwargs["y"] = geom["y"]
 
     main_window = webview.create_window(**window_kwargs)
 
@@ -413,15 +584,18 @@ def main():
     main_window.events.moved += lambda *args, **kwargs: debounced_save_state()
 
     def on_shown():
-        if saved_state.get("maximized"):
-            try:
-                time.sleep(0.1)
-                main_window.maximize()
-            except Exception:
-                pass
         hwnd = get_window_hwnd()
         if hwnd:
+            if desktop_bridge.state["is_pinned"]:
+                set_window_topmost(hwnd, True)
+            if mode == "studio" and desktop_bridge.state["studio"].get("maximized"):
+                try:
+                    time.sleep(0.1)
+                    main_window.maximize()
+                except Exception:
+                    pass
             force_activate_window(hwnd)
+        desktop_bridge.notify_frontend()
 
     main_window.events.shown += on_shown
 
