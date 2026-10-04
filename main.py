@@ -6,9 +6,10 @@ import threading
 import socket
 import http.server
 import functools
+import ctypes
 import webview
 import pystray
-from PIL import Image
+from PIL import Image, ImageDraw
 
 # Global references
 main_window = None
@@ -25,6 +26,81 @@ def get_state_file_path():
         return os.path.join(app_dir, "window_state.json")
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), "window_state.json")
 
+def is_position_visible(x, y, min_visible_w=100, min_visible_h=50):
+    """Check if the given (x, y) coordinates intersect with any active display."""
+    if x is None or y is None:
+        return False
+    # Filter out minimized or extreme off-screen coordinate markers (like -32000 in Win32)
+    if x <= -10000 or y <= -10000:
+        return False
+    try:
+        user32 = ctypes.windll.user32
+        # SM_XVIRTUALSCREEN = 76, SM_YVIRTUALSCREEN = 77, SM_CXVIRTUALSCREEN = 78, SM_CYVIRTUALSCREEN = 79
+        vx = user32.GetSystemMetrics(76)
+        vy = user32.GetSystemMetrics(77)
+        vw = user32.GetSystemMetrics(78)
+        vh = user32.GetSystemMetrics(79)
+        # Verify that at least a corner of the window title bar is within the virtual screen
+        if (x + min_visible_w > vx) and (x < vx + vw) and (y + min_visible_h > vy) and (y < vy + vh):
+            return True
+        return False
+    except Exception:
+        return 0 <= x < 20000 and 0 <= y < 20000
+
+def get_window_hwnd():
+    """Retrieve the native Win32 window HWND handle."""
+    global main_window
+    if not main_window:
+        return None
+    try:
+        import webview.platforms.winforms as wf
+        inst = wf.BrowserView.instances.get(main_window.uid)
+        if inst and hasattr(inst, "Handle"):
+            return inst.Handle.ToInt32()
+    except Exception:
+        pass
+    try:
+        user32 = ctypes.windll.user32
+        hwnd = user32.FindWindowW(None, "langtool - Desktop Assistant")
+        if hwnd:
+            return hwnd
+    except Exception:
+        pass
+    return None
+
+def force_activate_window(hwnd):
+    """Restore and bring the window to the foreground on Windows."""
+    if not hwnd:
+        return
+    try:
+        user32 = ctypes.windll.user32
+        kernel32 = ctypes.windll.kernel32
+
+        # SW_RESTORE = 9, SW_SHOW = 5
+        if user32.IsIconic(hwnd):
+            user32.ShowWindow(hwnd, 9)
+        else:
+            user32.ShowWindow(hwnd, 5)
+
+        # AttachThreadInput bypass to ensure window can take foreground from background tray
+        fg_hwnd = user32.GetForegroundWindow()
+        if fg_hwnd and fg_hwnd != hwnd:
+            fg_thread = user32.GetWindowThreadProcessId(fg_hwnd, None)
+            cur_thread = kernel32.GetCurrentThreadId()
+            if fg_thread != cur_thread and fg_thread != 0:
+                user32.AttachThreadInput(cur_thread, fg_thread, True)
+                user32.SetForegroundWindow(hwnd)
+                user32.BringWindowToTop(hwnd)
+                user32.AttachThreadInput(cur_thread, fg_thread, False)
+            else:
+                user32.SetForegroundWindow(hwnd)
+                user32.BringWindowToTop(hwnd)
+        else:
+            user32.SetForegroundWindow(hwnd)
+            user32.BringWindowToTop(hwnd)
+    except Exception as e:
+        print("force_activate_window warning:", e)
+
 def load_window_state():
     state_file = get_state_file_path()
     if os.path.exists(state_file):
@@ -38,16 +114,26 @@ def load_window_state():
                 maximized = bool(data.get("maximized", False))
 
                 # Ensure coordinates are reasonable numbers
-                if x is not None and not isinstance(x, (int, float)):
+                if x is not None and isinstance(x, (int, float)):
+                    x = int(x)
+                else:
                     x = None
-                if y is not None and not isinstance(y, (int, float)):
+
+                if y is not None and isinstance(y, (int, float)):
+                    y = int(y)
+                else:
+                    y = None
+
+                # Never load off-screen or minimized coordinates (-32000)
+                if not is_position_visible(x, y):
+                    x = None
                     y = None
 
                 return {
                     "width": width,
                     "height": height,
-                    "x": int(x) if x is not None else None,
-                    "y": int(y) if y is not None else None,
+                    "x": x,
+                    "y": y,
                     "maximized": maximized
                 }
         except Exception as e:
@@ -68,6 +154,13 @@ def save_window_state():
 
     with save_lock:
         try:
+            hwnd = get_window_hwnd()
+            if hwnd:
+                user32 = ctypes.windll.user32
+                # If window is currently minimized (IsIconic), NEVER save position/size
+                if user32.IsIconic(hwnd):
+                    return
+
             state_file = get_state_file_path()
             current_data = {}
             if os.path.exists(state_file):
@@ -77,27 +170,28 @@ def save_window_state():
                 except Exception:
                     pass
 
-            is_minimized = getattr(main_window, "minimized", False)
-            is_maximized = getattr(main_window, "maximized", False)
+            is_maximized = False
+            if hwnd:
+                user32 = ctypes.windll.user32
+                is_maximized = bool(user32.IsZoomed(hwnd))
 
-            # Never overwrite dimensions if currently minimized
-            if not is_minimized:
-                if not is_maximized:
-                    w = getattr(main_window, "width", None)
-                    h = getattr(main_window, "height", None)
-                    x = getattr(main_window, "x", None)
-                    y = getattr(main_window, "y", None)
+            if not is_maximized:
+                w = getattr(main_window, "width", None)
+                h = getattr(main_window, "height", None)
+                x = getattr(main_window, "x", None)
+                y = getattr(main_window, "y", None)
 
-                    if w and w >= 760:
-                        current_data["width"] = int(w)
-                    if h and h >= 520:
-                        current_data["height"] = int(h)
-                    if x is not None:
-                        current_data["x"] = int(x)
-                    if y is not None:
-                        current_data["y"] = int(y)
+                if w and w >= 760:
+                    current_data["width"] = int(w)
+                if h and h >= 520:
+                    current_data["height"] = int(h)
 
-                current_data["maximized"] = is_maximized
+                # Only save position if strictly visible and not offscreen / minimized
+                if is_position_visible(x, y):
+                    current_data["x"] = int(x)
+                    current_data["y"] = int(y)
+
+            current_data["maximized"] = is_maximized
 
             with open(state_file, "w", encoding="utf-8") as f:
                 json.dump(current_data, f, indent=2)
@@ -127,12 +221,43 @@ def start_static_server(port, directory):
 
 def show_window():
     global main_window
-    if main_window:
+    if not main_window:
+        return
+
+    try:
+        hwnd = get_window_hwnd()
+        user32 = ctypes.windll.user32
+
+        # Step 1: Check if window position is offscreen (e.g. -32000) and bring it back
         try:
-            main_window.show()
-            main_window.restore()
-        except Exception as e:
-            print("Error showing window:", e)
+            curr_x = getattr(main_window, 'x', None)
+            curr_y = getattr(main_window, 'y', None)
+            if not is_position_visible(curr_x, curr_y):
+                saved = load_window_state()
+                tx = saved.get("x")
+                ty = saved.get("y")
+                if not is_position_visible(tx, ty):
+                    # Center on primary monitor
+                    sw = user32.GetSystemMetrics(0)
+                    sh = user32.GetSystemMetrics(1)
+                    ww = saved.get("width", 1020)
+                    wh = saved.get("height", 720)
+                    tx = max(80, (sw - ww) // 2)
+                    ty = max(60, (sh - wh) // 2)
+                main_window.move(int(tx), int(ty))
+        except Exception as ex:
+            print("Position verification warning:", ex)
+
+        # Step 2: pywebview restore & show
+        main_window.show()
+        main_window.restore()
+
+        # Step 3: Windows foreground activation
+        if hwnd:
+            force_activate_window(hwnd)
+
+    except Exception as e:
+        print("Error showing window:", e)
 
 def hide_window():
     global main_window
@@ -167,8 +292,6 @@ def quit_app():
         except Exception:
             pass
     os._exit(0)
-
-from PIL import Image, ImageDraw
 
 def make_rounded_icon(image):
     try:
@@ -268,6 +391,9 @@ def main():
                 main_window.maximize()
             except Exception:
                 pass
+        hwnd = get_window_hwnd()
+        if hwnd:
+            force_activate_window(hwnd)
 
     main_window.events.shown += on_shown
 
