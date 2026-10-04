@@ -12,18 +12,26 @@ export function normalizeApiUrl(url: string): string {
 
 export function getStoredApiUrl(): string {
   if (typeof window === "undefined") return DEFAULT_API_URL;
-  const saved = localStorage.getItem(STORAGE_KEY);
-  return saved ? normalizeApiUrl(saved) : DEFAULT_API_URL;
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? normalizeApiUrl(saved) : DEFAULT_API_URL;
+  } catch {
+    return DEFAULT_API_URL;
+  }
 }
 
 export function setStoredApiUrl(url: string): void {
   const normalized = normalizeApiUrl(url);
-  localStorage.setItem(STORAGE_KEY, normalized);
+  try {
+    localStorage.setItem(STORAGE_KEY, normalized);
+  } catch {}
   cachedLanguages = null; // Clear cached languages so they reload from new endpoint
 }
 
 export function resetStoredApiUrl(): string {
-  localStorage.removeItem(STORAGE_KEY);
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {}
   cachedLanguages = null;
   return DEFAULT_API_URL;
 }
@@ -161,21 +169,34 @@ export async function checkText(
   params.append("text", text);
   params.append("language", language);
 
-  const response = await fetch(`${url}/check`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Accept: "application/json",
-    },
-    body: params.toString(),
-    signal,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${url}/check`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+      },
+      body: params.toString(),
+      signal,
+    });
+  } catch (err: any) {
+    if (err.name === "AbortError") {
+      throw err;
+    }
+    throw new Error(`Unable to reach server at ${url}. Please check your connection or settings.`);
+  }
 
   if (!response.ok) {
     throw new Error(`Server returned ${response.status}: ${response.statusText}`);
   }
 
-  const data = await response.json();
+  let data: any;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error("Server returned an invalid non-JSON response.");
+  }
 
   const formattedMatches: Match[] = (data.matches || []).map(
     (m: any, index: number) => ({

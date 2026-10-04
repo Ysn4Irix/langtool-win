@@ -261,15 +261,25 @@ Output strictly valid JSON with this exact schema:
   };
 
   let activeModel = config.model || DEFAULT_GROQ_MODEL;
-  let res = await sendRequest(activeModel);
+  let res: Response;
+  try {
+    res = await sendRequest(activeModel);
+  } catch (err: any) {
+    if (err.name === "AbortError") {
+      throw new Error("Request timed out. Please try again.");
+    }
+    throw new Error("Could not connect to Groq Cloud. Please check your internet connection.");
+  }
 
   // Auto-recovery: if 404 model not accessible and not already using default, fall back to DEFAULT_GROQ_MODEL
   if (res.status === 404 && activeModel !== DEFAULT_GROQ_MODEL) {
     activeModel = DEFAULT_GROQ_MODEL;
-    res = await sendRequest(activeModel);
-    if (res.ok) {
-      setGroqConfig({ model: DEFAULT_GROQ_MODEL });
-    }
+    try {
+      res = await sendRequest(activeModel);
+      if (res.ok) {
+        setGroqConfig({ model: DEFAULT_GROQ_MODEL });
+      }
+    } catch {}
   }
 
   if (!res.ok) {
@@ -286,15 +296,32 @@ Output strictly valid JSON with this exact schema:
     throw new Error(`Groq API error (${res.status}): ${errText.slice(0, 150)}`);
   }
 
-  const data = await res.json();
+  let data: any;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error("Received an unreadable response from Groq Cloud. Please try again.");
+  }
+
   const rawContent = data.choices?.[0]?.message?.content;
   if (!rawContent) {
     throw new Error("No response received from Groq model.");
   }
 
-  const parsed = JSON.parse(rawContent);
+  let cleanedContent = rawContent.trim();
+  if (cleanedContent.startsWith("```")) {
+    cleanedContent = cleanedContent.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "");
+  }
+
+  let parsed: any;
+  try {
+    parsed = JSON.parse(cleanedContent);
+  } catch {
+    throw new Error("Failed to parse stylistic suggestions from AI output. Please try again.");
+  }
+
   if (!Array.isArray(parsed.suggestions) || parsed.suggestions.length === 0) {
-    throw new Error("Invalid response structure from Groq model.");
+    throw new Error("The AI model did not return formatted suggestions. Please try again.");
   }
 
   return parsed.suggestions.map((s: any) => ({

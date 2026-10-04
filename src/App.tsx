@@ -19,7 +19,11 @@ export default function App() {
 
   const [text, setText] = useState<string>(() => {
     if (typeof window === "undefined") return "";
-    return localStorage.getItem(STORAGE_TEXT_KEY) ?? "";
+    try {
+      return localStorage.getItem(STORAGE_TEXT_KEY) ?? "";
+    } catch {
+      return "";
+    }
   });
   const [language, setLanguage] = useState<string>("auto");
   const [languages, setLanguages] = useState<Language[]>([]);
@@ -54,8 +58,12 @@ export default function App() {
   }, [language, detectedLanguage, text]);
 
   const handleTriggerRephrase = useCallback(() => {
+    if (!text.trim()) {
+      toast.info("Please enter a sentence to rephrase");
+      return;
+    }
     editorRef.current?.triggerRephrase();
-  }, []);
+  }, [text, toast]);
 
   // Load languages whenever apiUrl changes
   const loadLanguages = useCallback(async (currentUrl?: string) => {
@@ -75,10 +83,18 @@ export default function App() {
 
   // Perform API check
   const runCheck = useCallback(
-    async (textToCheck: string, langToCheck: string, endpointUrl?: string) => {
+    async (
+      textToCheck: string,
+      langToCheck: string,
+      endpointUrl?: string,
+      isManual: boolean = false
+    ) => {
       if (!textToCheck.trim()) {
         setMatches([]);
         setIsChecking(false);
+        if (isManual) {
+          toast.info("Enter some text to check");
+        }
         return;
       }
 
@@ -105,16 +121,27 @@ export default function App() {
         // Filter out ignored issues
         const active = response.matches.filter((m) => !ignoredIds.has(m.id));
         setMatches(active);
+
+        if (isManual) {
+          if (active.length === 0) {
+            toast.success("No issues found! Text looks good.");
+          } else {
+            toast.info(`Found ${active.length} issue${active.length > 1 ? "s" : ""}`);
+          }
+        }
       } catch (err: any) {
         if (err.name !== "AbortError") {
           console.error("LanguageTool check error:", err);
           setApiConnected(false);
+          if (isManual) {
+            toast.error(err.message || "Could not reach LanguageTool server.");
+          }
         }
       } finally {
         setIsChecking(false);
       }
     },
-    [apiUrl, ignoredIds]
+    [apiUrl, ignoredIds, toast]
   );
 
   // Automatically persist user input to localStorage
@@ -155,7 +182,7 @@ export default function App() {
       // Ctrl+Enter -> Manual check
       if (e.ctrlKey && e.key === "Enter") {
         e.preventDefault();
-        runCheck(text, language, apiUrl);
+        runCheck(text, language, apiUrl, true);
       }
       // Ctrl+Shift+C -> Copy text
       if (e.ctrlKey && e.shiftKey && (e.key === "c" || e.key === "C")) {
@@ -245,7 +272,7 @@ export default function App() {
         onSelectLanguage={setLanguage}
         detectedLanguage={detectedLanguage}
         isChecking={isChecking}
-        onManualCheck={() => runCheck(text, language, apiUrl)}
+        onManualCheck={() => runCheck(text, language, apiUrl, true)}
         onRephrase={handleTriggerRephrase}
         hasText={text.trim().length > 0}
         onClearText={handleClearText}
@@ -286,6 +313,8 @@ export default function App() {
             onIgnore={handleIgnore}
             onClose={() => setShowSidebar(false)}
             isRtl={isRtl}
+            apiConnected={apiConnected}
+            onOpenSettings={() => setIsSettingsOpen(true)}
           />
         )}
       </main>

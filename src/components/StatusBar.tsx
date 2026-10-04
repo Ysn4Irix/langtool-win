@@ -75,6 +75,11 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-ping" />
             Analyzing text...
           </span>
+        ) : !apiConnected ? (
+          <span className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400 font-medium">
+            <AlertCircle className="w-3.5 h-3.5" />
+            <span>Server disconnected</span>
+          </span>
         ) : issueCount === 0 ? (
           <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
             <CheckCircle2 className="w-3.5 h-3.5" />

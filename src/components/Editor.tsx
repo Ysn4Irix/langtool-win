@@ -4,6 +4,7 @@ import { RephraseSentenceInfo } from "../types/rephrase";
 import { SuggestionPopover } from "./SuggestionPopover";
 import { RephraseModal } from "./RephraseModal";
 import { getCurrentSentence, replaceSentenceInText } from "../utils/sentenceUtils";
+import { useToast } from "../context/ToastContext";
 
 export interface EditorHandle {
   triggerRephrase: () => void;
@@ -39,6 +40,7 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
     },
     ref
   ) => {
+    const toast = useToast();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const backdropRef = useRef<HTMLDivElement>(null);
 
@@ -74,7 +76,10 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
     // Expose triggerRephrase imperative handle to parent (Header / shortcuts)
     useImperativeHandle(ref, () => ({
       triggerRephrase: () => {
-        if (!text.trim()) return;
+        if (!text.trim()) {
+          toast.info("Please enter a sentence to rephrase");
+          return;
+        }
         const target = currentSentence || getCurrentSentence(text, 0);
         if (target) {
           setActiveSentenceInfo(target);
@@ -129,7 +134,10 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.ctrlKey && e.shiftKey && (e.key === "r" || e.key === "R")) {
           e.preventDefault();
-          if (!text.trim()) return;
+          if (!text.trim()) {
+            toast.info("Please enter a sentence to rephrase");
+            return;
+          }
           const target = currentSentence || getCurrentSentence(text, 0);
           if (target) {
             setActiveSentenceInfo(target);
@@ -139,7 +147,7 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
       };
       window.addEventListener("keydown", handleKeyDown);
       return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [currentSentence, text]);
+    }, [currentSentence, text, toast]);
 
     // Edge Case 1: When user is actively typing inside an existing match,
     // temporarily suppress its wavy underline so it doesn't drift or look jarring.

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Check, X, Wand2 } from "lucide-react";
+import { Check, X, Wand2, AlertCircle } from "lucide-react";
 import { Match, IssueCategoryType } from "../types/langtool";
 
 interface IssuesPanelProps {
@@ -11,6 +11,8 @@ interface IssuesPanelProps {
   onIgnore: (matchId: string) => void;
   onClose: () => void;
   isRtl?: boolean;
+  apiConnected?: boolean;
+  onOpenSettings?: () => void;
 }
 
 export const IssuesPanel: React.FC<IssuesPanelProps> = ({
@@ -22,6 +24,8 @@ export const IssuesPanel: React.FC<IssuesPanelProps> = ({
   onIgnore,
   onClose,
   isRtl = false,
+  apiConnected = true,
+  onOpenSettings,
 }) => {
   const [filter, setFilter] = useState<"all" | IssueCategoryType>("all");
 
@@ -120,7 +124,29 @@ export const IssuesPanel: React.FC<IssuesPanelProps> = ({
 
       {/* Issue Cards List */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
-        {filteredMatches.length === 0 ? (
+        {!apiConnected ? (
+          <div className="h-64 flex flex-col items-center justify-center text-center p-5 text-slate-500 dark:text-slate-400 space-y-3">
+            <div className="p-3 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-500 border border-rose-200 dark:border-rose-900/60">
+              <AlertCircle className="w-7 h-7" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                LanguageTool Offline
+              </p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-xs leading-relaxed">
+                Could not connect to the proofreading server. Check your connection or verify endpoint in Settings.
+              </p>
+            </div>
+            {onOpenSettings && (
+              <button
+                onClick={onOpenSettings}
+                className="mt-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+              >
+                Open Server Settings
+              </button>
+            )}
+          </div>
+        ) : filteredMatches.length === 0 ? (
           <div className="h-48 flex flex-col items-center justify-center text-center p-4 text-slate-400 dark:text-slate-500">
             <Check className="w-8 h-8 text-emerald-500/70 mb-2" />
             <p className="text-xs font-medium text-slate-700 dark:text-slate-400">Everything looks great!</p>
