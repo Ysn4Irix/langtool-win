@@ -28,7 +28,6 @@ export default function App() {
   const [isChecking, setIsChecking] = useState<boolean>(false);
   const [apiConnected, setApiConnected] = useState<boolean>(true);
   const [showSidebar, setShowSidebar] = useState<boolean>(true);
-  const [isCopied, setIsCopied] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [apiUrl, setApiUrl] = useState<string>(getStoredApiUrl);
 
@@ -206,8 +205,6 @@ export default function App() {
     if (!text) return;
     try {
       await navigator.clipboard.writeText(text);
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
       console.error("Clipboard copy error:", err);
     }
@@ -244,7 +241,6 @@ export default function App() {
         hasText={text.trim().length > 0}
         onClearText={handleClearText}
         onCopyText={handleCopyText}
-        isCopied={isCopied}
         showSidebar={showSidebar}
         onToggleSidebar={() => setShowSidebar(!showSidebar)}
         issueCounts={issueCounts}

@@ -72,8 +72,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     availableModels?: string[];
   } | null>(null);
 
-  const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
-
   const loadDynamicModels = async (key: string) => {
     if (!key.trim()) return;
     setIsFetchingModels(true);
@@ -109,8 +107,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       } else {
         setModelList(AVAILABLE_GROQ_MODELS);
       }
-
-      setSavedSuccess(false);
     }
   }, [isOpen]);
 
@@ -167,11 +163,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       model: groqModel,
     });
 
-    setSavedSuccess(true);
-    setTimeout(() => {
-      setSavedSuccess(false);
-      onClose();
-    }, 600);
+    onClose();
   };
 
   const handleReset = () => {
@@ -506,17 +498,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             onClick={handleSave}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-md shadow-sky-600/20 active:scale-95 transition-all"
           >
-            {savedSuccess ? (
-              <>
-                <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                <span>Saved!</span>
-              </>
-            ) : (
-              <>
-                <Save className="w-3.5 h-3.5" />
-                <span>Save Changes</span>
-              </>
-            )}
+            <Save className="w-3.5 h-3.5" />
+            <span>Save Changes</span>
           </button>
         </div>
       </div>

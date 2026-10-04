@@ -3,7 +3,6 @@ import {
   Sparkles,
   X,
   Copy,
-  Check,
   RefreshCw,
   Key,
   ExternalLink,
@@ -43,7 +42,6 @@ export const RephraseModal: React.FC<RephraseModalProps> = ({
   const [suggestions, setSuggestions] = useState<RephraseSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   // Quick Key Input state if not yet configured
   const [quickApiKey, setQuickApiKey] = useState<string>("");
@@ -95,11 +93,9 @@ export const RephraseModal: React.FC<RephraseModalProps> = ({
     }
   };
 
-  const handleCopy = async (text: string, index: number) => {
+  const handleCopy = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopiedIndex(index);
-      setTimeout(() => setCopiedIndex(null), 1800);
     } catch (err) {
       console.error("Copy failed:", err);
     }
@@ -330,15 +326,11 @@ export const RephraseModal: React.FC<RephraseModalProps> = ({
                       {/* Action buttons */}
                       <div className="flex items-center gap-1.5">
                         <button
-                          onClick={() => handleCopy(item.text, idx)}
+                          onClick={() => handleCopy(item.text)}
                           title="Copy rephrased sentence"
-                          className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700/80 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs transition-colors"
+                          className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700/80 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs transition-colors active:scale-95"
                         >
-                          {copiedIndex === idx ? (
-                            <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                          ) : (
-                            <Copy className="w-3.5 h-3.5" />
-                          )}
+                          <Copy className="w-3.5 h-3.5" />
                         </button>
 
                         <button
