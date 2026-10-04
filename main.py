@@ -206,7 +206,32 @@ def debounced_save_state():
     save_timer.daemon = True
     save_timer.start()
 
-def get_free_port():
+def is_system_dark_theme():
+    try:
+        import winreg
+        key = winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
+            0,
+            winreg.KEY_READ
+        )
+        val, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
+        winreg.CloseKey(key)
+        return val == 0
+    except Exception:
+        return False
+
+DEFAULT_APP_PORT = 48123
+
+def get_app_port():
+    # Deterministic port ensures localStorage (theme, user draft, api url) persists across launches
+    for port in (DEFAULT_APP_PORT, 48124, 48125, 48126):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind(('127.0.0.1', port))
+                return port
+        except OSError:
+            continue
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(('127.0.0.1', 0))
         return s.getsockname()[1]
@@ -353,7 +378,7 @@ def main():
         print("Dist folder not found. Running build...")
         os.system("npm run build")
 
-    port = get_free_port()
+    port = get_app_port()
     start_static_server(port, dist_dir)
     app_url = f"http://127.0.0.1:{port}"
 
@@ -362,13 +387,16 @@ def main():
     setup_system_tray(icon_path)
     setup_global_hotkey()
 
+    system_is_dark = is_system_dark_theme()
+    initial_bg = "#0f172a" if system_is_dark else "#f8fafc"
+
     window_kwargs = {
         "title": "langtool - Desktop Assistant",
         "url": app_url,
         "width": saved_state["width"],
         "height": saved_state["height"],
         "min_size": (760, 520),
-        "background_color": "#0f172a",
+        "background_color": initial_bg,
         "text_select": True,
         "resizable": True,
     }
@@ -397,8 +425,14 @@ def main():
 
     main_window.events.shown += on_shown
 
-    # Start Edge WebView2
-    webview.start(debug=False)
+    # Persistent storage folder for WebView2 local storage and cookies
+    appdata = os.environ.get("APPDATA")
+    storage_path = os.path.join(appdata, "LanguageToolWin", "web_cache") if appdata else None
+    if storage_path:
+        os.makedirs(storage_path, exist_ok=True)
+
+    # Start Edge WebView2 with persistent storage and cookies enabled
+    webview.start(debug=False, private_mode=False, storage_path=storage_path)
 
 if __name__ == "__main__":
     main()
